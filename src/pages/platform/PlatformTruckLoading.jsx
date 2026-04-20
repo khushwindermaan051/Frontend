@@ -116,7 +116,6 @@ function FullLoadingWorkflow({ config, addDispatch }) {
     searchTimer.current = setTimeout(() => setDebouncedSearch(val), 400);
   };
 
-  // Read POs from Supabase
   const { availablePOs, poLoading, poNameCol, poQtyCol, getPoKey } = usePOs(
     config,
     debouncedSearch,
@@ -372,7 +371,6 @@ function FullLoadingWorkflow({ config, addDispatch }) {
             </div>
           </div>
 
-          {/* Available POs (read from Supabase) */}
           <div className="plat-truck-section">
             <div
               style={{
@@ -609,7 +607,6 @@ function QuickBulkDispatch({ config, addDispatch }) {
     searchTimer.current = setTimeout(() => setDebouncedSearch(val), 400);
   };
 
-  // Read POs from Supabase
   const { availablePOs, poLoading, poNameCol, poQtyCol, getPoKey } = usePOs(
     config,
     debouncedSearch,

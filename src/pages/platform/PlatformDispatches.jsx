@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { usePlatform } from '../../context/PlatformContext';
 import { useDispatch } from '../../context/DispatchContext';
 
@@ -89,9 +89,8 @@ export default function PlatformDispatches() {
                   </thead>
                   <tbody>
                     {dispatches.map((d, i) => (
-                      <>
+                      <Fragment key={d.id}>
                         <tr
-                          key={d.id}
                           style={{ cursor: 'pointer' }}
                           onClick={() =>
                             setExpanded(expanded === d.id ? null : d.id)
@@ -136,7 +135,7 @@ export default function PlatformDispatches() {
                           </td>
                         </tr>
                         {expanded === d.id && (
-                          <tr key={`${d.id}-details`}>
+                          <tr>
                             <td
                               colSpan={11}
                               style={{
@@ -188,7 +187,7 @@ export default function PlatformDispatches() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>

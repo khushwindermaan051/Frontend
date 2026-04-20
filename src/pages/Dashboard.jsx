@@ -71,13 +71,6 @@ async function fetchExpiryAlerts(tableName) {
   }
 }
 
-function daysUntil(dateStr) {
-  const diff = Math.ceil(
-    (new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24),
-  );
-  return diff;
-}
-
 // ─── Alerts Panel ───
 function AlertsPanel({ alerts, loading, onTableClick }) {
   if (loading) {
