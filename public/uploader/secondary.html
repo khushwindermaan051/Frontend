@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Platform Secondary Entry</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { max-width: 1200px; margin: 0 auto; padding: 20px; background: #f7fdf5; }
+    h1 { text-align: center; color: #333; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+    .platform-selector { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .platform-btn { padding: 12px 20px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; background: #fff; transition: all 0.3s; }
+    .platform-btn:hover { border-color: #999; }
+    .platform-btn.active { border-color: #3ECF8E; background: #f0fff5; color: #2db87a; }
+    .platform-btn[data-platform="blinkitSec"] { border-left: 4px solid #F9C22E; }
+    .platform-btn[data-platform="zeptoSec"] { border-left: 4px solid #8B5CF6; }
+    .platform-btn[data-platform="swiggySec"] { border-left: 4px solid #FC8019; }
+    .platform-btn[data-platform="flipkartSec"] { border-left: 4px solid #2874F0; }
+    .platform-btn[data-platform="jiomartSec"] { border-left: 4px solid #0078AD; }
+    .platform-btn[data-platform="bigbasketSec"] { border-left: 4px solid #84C225; }
+    .platform-btn[data-platform="amazonDaily"], .platform-btn[data-platform="amazonRange"] { border-left: 4px solid #FF9900; }
+    .current-platform { text-align: center; padding: 10px; margin-bottom: 15px; border-radius: 8px; font-weight: bold; }
+    .tabs { display: flex; gap: 5px; }
+    .tab-btn { padding: 12px 24px; background: #ddd; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 15px; font-weight: bold; }
+    .tab-btn:hover { background: #ccc; }
+    .tab-btn.active { background: #fff; color: #3ECF8E; }
+    .tab-panel { display: none; background: #fff; padding: 20px; border-radius: 0 8px 8px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .tab-panel.active { display: block; }
+    textarea { width: 100%; min-height: 180px; padding: 12px; border: 2px dashed #ccc; border-radius: 8px; font-family: monospace; font-size: 13px; margin: 10px 0; }
+    textarea:focus { border-color: #3ECF8E; outline: none; }
+    .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-right: 10px; margin-top: 10px; }
+    .btn-green { background: #3ECF8E; color: #fff; }
+    .btn-green:hover { background: #2db87a; }
+    .btn-gray { background: #6c757d; color: #fff; }
+    .btn-gray:hover { background: #5a6268; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    .upload-box { border: 2px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; background: #fafafa; margin: 10px 0; }
+    .upload-box:hover { border-color: #3ECF8E; background: #f0fff5; }
+    .upload-box input { display: none; }
+    .settings { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .settings label { margin-right: 20px; cursor: pointer; }
+    .settings input[type="checkbox"] { margin-right: 5px; }
+    .info { background: #e7f5ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+    .info code { background: #d0ebff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+    .date-format { background: #fff3cd; padding: 8px 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
+    .table-container { margin-top: 20px; max-height: 350px; overflow: auto; border: 1px solid #ddd; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
+    th { background: #f8f9fa; position: sticky; top: 0; font-size: 10px; }
+    .msg { padding: 12px; border-radius: 6px; margin-top: 15px; }
+    .msg-success { background: #d4edda; color: #155724; }
+    .msg-error { background: #f8d7da; color: #721c24; }
+    .msg-warning { background: #fff3cd; color: #856404; }
+    .progress { margin-top: 15px; display: none; }
+    .progress-bar { height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #3ECF8E; text-align: center; color: #fff; font-size: 12px; line-height: 20px; transition: width 0.3s; }
+    .row-badge { background: #3ECF8E; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+    .columns-display { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; max-height: 80px; overflow-y: auto; }
+    .columns-display code { background: #d0ebff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+  </style>
+</head>
+<body>
+<h1>Jivo Mart Secondary Sales 🛒</h1>
+<p class="subtitle">All Platform Secondary Storage Tool</p>
+
+<div class="platform-selector">
+  <button class="platform-btn active" data-platform="blinkitSec">🟡 Blinkit</button>
+  <button class="platform-btn" data-platform="zeptoSec">🟣 Zepto</button>
+  <button class="platform-btn" data-platform="swiggySec">🟠 Swiggy</button>
+  <button class="platform-btn" data-platform="flipkartSec">🔵 Flipkart</button>
+  <button class="platform-btn" data-platform="jiomartSec">🟡 JioMart</button>
+  <button class="platform-btn" data-platform="bigbasketSec">🟢 BigBasket</button>
+  <button class="platform-btn" data-platform="amazon" id="amazon-btn">🟠 Amazon</button>
+</div>
+
+<!-- Amazon Manual Selection -->
+<div id="amazon-options" style="display:none; margin-bottom:20px; padding:15px; background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1); border-left:4px solid #FF9900;">
+  <div style="display:flex; gap:30px; flex-wrap:wrap; align-items:center;">
+    <div>
+      <strong>📊 Data Type:</strong>
+      <label style="margin-left:10px; cursor:pointer;"><input type="radio" name="amazon-type" value="daily" checked> Daily</label>
+      <label style="margin-left:10px; cursor:pointer;"><input type="radio" name="amazon-type" value="range"> Range</label>
+    </div>
+  </div>
+  <div id="amazon-detected-info" style="margin-top:10px; padding:10px; background:#fff8e6; border-radius:6px; display:none;">
+    <strong>📋 Detected:</strong>
+    <span id="amazon-detected-entity">-</span> |
+    <span id="amazon-detected-dates">-</span>
+  </div>
+</div>
+
+<div class="current-platform" id="current-platform" style="background: #FEF9E7; border: 2px solid #F9C22E;">
+  📦 Currently Selected: <span id="platform-name">Blinkit</span> | Table: <span id="table-name">blinkitSec</span>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tab1-btn">📋 Copy/Paste</button>
+  <button class="tab-btn" id="tab2-btn">📄 CSV Upload</button>
+</div>
+
+<div class="tab-panel active" id="tab1">
+  <div class="info">
+    <strong>📋 How to use:</strong> Select platform → Copy from Excel → Paste below → Parse → Insert<br>
+    <strong>Columns (<span id="col-count-paste">10</span>):</strong>
+    <div class="columns-display" id="columns-display-paste"></div>
+    <div class="date-format" id="date-format-paste">📅 Date Format: <strong>DD-MM-YYYY</strong></div>
+  </div>
+  <div class="settings">
+    <strong>⚙️ Settings:</strong>
+    <label><input type="checkbox" id="paste-header" checked> First row is header</label>
+    <label><input type="checkbox" id="paste-upsert" checked> Update existing (Upsert)</label>
+  </div>
+  <textarea id="paste-input" placeholder="Paste your Excel/Sheets data here..."></textarea>
+  <div>
+    <button class="btn btn-green" id="paste-parse-btn">Parse Data</button>
+    <button class="btn btn-gray" id="paste-clear-btn">Clear</button>
+  </div>
+  <div id="paste-preview" style="display:none;">
+    <h3>📊 Preview <span class="row-badge" id="paste-count">0 rows</span></h3>
+    <div class="table-container"><table id="paste-table"><thead></thead><tbody></tbody></table></div>
+    <button class="btn btn-green" id="paste-insert-btn" style="margin-top:15px;">Insert All Data</button>
+  </div>
+  <div class="progress" id="paste-progress"><div class="progress-bar"><div class="progress-fill" id="paste-progress-fill">0%</div></div></div>
+  <div id="paste-msg"></div>
+</div>
+
+<div class="tab-panel" id="tab2">
+  <div class="info">
+    <strong>📄 Upload CSV/TSV file</strong><br>
+    <strong>Columns (<span id="col-count-csv">10</span>):</strong>
+    <div class="columns-display" id="columns-display-csv"></div>
+    <div class="date-format" id="date-format-csv">📅 Date Format: <strong>DD-MM-YYYY</strong></div>
+  </div>
+  <div class="settings">
+    <strong>⚙️ Settings:</strong>
+    <label><input type="checkbox" id="csv-header" checked> First row is header</label>
+    <label><input type="checkbox" id="csv-upsert" checked> Update existing (Upsert)</label>
+  </div>
+  <div class="upload-box" id="upload-box">
+    <input type="file" id="csv-input" accept=".csv,.tsv,.txt">
+    <div style="font-size:40px;">📁</div>
+    <div>Click to upload or drag & drop</div>
+    <div style="font-size:12px;color:#999;">CSV, TSV files</div>
+  </div>
+  <div id="csv-preview" style="display:none;">
+    <h3>📊 Preview <span class="row-badge" id="csv-count">0 rows</span></h3>
+    <div class="table-container"><table id="csv-table"><thead></thead><tbody></tbody></table></div>
+    <div>
+      <button class="btn btn-green" id="csv-insert-btn">Insert All Data</button>
+      <button class="btn btn-gray" id="csv-clear-btn">Clear</button>
+    </div>
+  </div>
+  <div class="progress" id="csv-progress"><div class="progress-bar"><div class="progress-fill" id="csv-progress-fill">0%</div></div></div>
+  <div id="csv-msg"></div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8000';
+
+// JioMart Column Mapping: CSV Name -> DB Name (51 columns)
+const JIOMART_COLUMN_MAP = {
+  'Seller GSTIN': 'SELLER_GSTIN',
+  'Order ID': 'ORDER_ID',
+  'Order Item ID': 'ORDER_ITEM_ID',
+  'Order Type': 'ORDER_TYPE',
+  'Order Date': 'ORDER_DATE',
+  'Order Approval Date': 'ORDER_APPROVAL_DATE',
+  'Type': 'TYPE',
+  'Shipment Number': 'SHIPMENT_NUMBER',
+  'Original Shipment Number': 'ORIGINAL_SHIPMENT_NUMBER',
+  'Fulfillment Type': 'FULFILLMENT_TYPE',
+  'Fulfiller Name': 'FULFILLER_NAME',
+  'Product Title/Description': 'PRODUCT_TITLE',
+  'FSN / Product ID': 'FSN_PRODUCT_ID',
+  'SKU': 'SKU',
+  'HSN Code': 'HSN_CODE',
+  'Order Status': 'ORDER_STATUS',
+  'Event Type': 'EVENT_TYPE',
+  'Event Sub Type': 'EVENT_SUB_TYPE',
+  'Item Quantity': 'ITEM_QUANTITY',
+  'Buyer Invoice ID': 'BUYER_INVOICE_ID',
+  'Original Invoice ID': 'ORIGINAL_INVOICE_ID',
+  'Buyer Invoice Date': 'BUYER_INVOICE_DATE',
+  'Sale/Sale reversal TCS date': 'TCS_DATE',
+  'Buyer Invoice Amount': 'BUYER_INVOICE_AMOUNT',
+  'Order Shipped From (State)': 'SHIPPED_FROM_STATE',
+  'Order Billed From (State)': 'BILLED_FROM_STATE',
+  "Customer's Billing Pincode": 'BILLING_PINCODE',
+  "Customer's Billing State": 'BILLING_STATE',
+  "Customer's Delivery Pincode": 'DELIVERY_PINCODE',
+  "Customer's Delivery State": 'DELIVERY_STATE',
+  'Seller Coupon Code': 'SELLER_COUPON_CODE',
+  'Offer Price': 'OFFER_PRICE',
+  'Seller Coupon Amount': 'SELLER_COUPON_AMOUNT',
+  'Final Invoice Amount (Offer Price minus Seller Coupon Amount)': 'FINAL_INVOICE_AMOUNT',
+  'Type of tax': 'TAX_TYPE',
+  'Taxable Value (Final Invoice Amount -Taxes)': 'TAXABLE_VALUE',
+  'IGST Rate': 'IGST_RATE',
+  'IGST Amount': 'IGST_AMOUNT',
+  'CGST Rate': 'CGST_RATE',
+  'CGST Amount': 'CGST_AMOUNT',
+  'SGST Rate (or UTGST as applicable)': 'SGST_RATE',
+  'SGST Amount (Or UTGST as applicable)': 'SGST_AMOUNT',
+  'TCS IGST Rate': 'TCS_IGST_RATE',
+  'TCS IGST Amount': 'TCS_IGST_AMOUNT',
+  'TCS CGST Rate': 'TCS_CGST_RATE',
+  'TCS CGST Amount': 'TCS_CGST_AMOUNT',
+  'TCS SGST Rate': 'TCS_SGST_RATE',
+  'TCS SGST Amount': 'TCS_SGST_AMOUNT',
+  'Total TCS Deducted': 'TOTAL_TCS_DEDUCTED',
+  'TDS 194O Rate': 'TDS_194O_RATE',
+  'TDS 194O Amount': 'TDS_194O_AMOUNT'
+};
+
+const PLATFORMS = {
+  blinkitSec: {
+    name: 'Blinkit',
+    color: '#F9C22E',
+    bgColor: '#FEF9E7',
+    table: 'blinkitSec',
+    columns: ['item_id', 'item_name', 'manufacturer_id', 'manufacturer_name', 'city_id', 'city_name', 'category', 'date', 'qty_sold', 'mrp'],
+    dateColumn: 'date',
+    dateFormat: 'DD-MM-YYYY',
+    dateExample: '01-12-2025',
+    uniqueKey: 'item_id,city_id,date',
+    uniqueKeyFields: ['item_id', 'city_id', 'date'],
+    requiredFields: ['item_id', 'city_id'],
+    numericFields: ['item_id', 'manufacturer_id', 'city_id', 'qty_sold'],
+    decimalFields: ['mrp'],
+    columnMapping: null
+  },
+  zeptoSec: {
+    name: 'Zepto',
+    color: '#8B5CF6',
+    bgColor: '#F3E8FF',
+    table: 'zeptoSec',
+    columns: ['Date', 'SKU Number', 'SKU Name', 'EAN', 'SKU Category', 'SKU Sub Category', 'Brand Name', 'Manufacturer Name', 'Manufacturer ID', 'City', 'Sales (Qty) - Units', 'MRP', 'Gross Merchandise Value'],
+    dateColumn: 'Date',
+    dateFormat: 'DD-MM-YYYY',
+    dateExample: '01-12-2025',
+    uniqueKey: 'SKU Number,City,Date',
+    uniqueKeyFields: ['SKU Number', 'City', 'Date'],
+    requiredFields: ['SKU Number', 'City'],
+    numericFields: ['Sales (Qty) - Units'],
+    decimalFields: ['MRP', 'Gross Merchandise Value'],
+    columnMapping: null
+  },
+  swiggySec: {
+    name: 'Swiggy Instamart',
+    color: '#FC8019',
+    bgColor: '#FFF4E6',
+    table: 'swiggySec',
+    columns: ['BRAND', 'ORDERED_DATE', 'CITY', 'AREA_NAME', 'STORE_ID', 'L1_CATEGORY', 'L2_CATEGORY', 'L3_CATEGORY', 'PRODUCT_NAME', 'VARIANT', 'ITEM_CODE', 'COMBO', 'COMBO_ITEM_CODE', 'COMBO_UNITS_SOLD', 'BASE_MRP', 'UNITS_SOLD', 'GMV'],
+    dateColumn: 'ORDERED_DATE',
+    dateFormat: 'DD-MM-YYYY',
+    dateExample: '13-12-2025',
+    uniqueKey: 'ITEM_CODE,STORE_ID,ORDERED_DATE,COMBO',
+    uniqueKeyFields: ['ITEM_CODE', 'STORE_ID', 'ORDERED_DATE', 'COMBO'],
+    requiredFields: ['ITEM_CODE', 'STORE_ID'],
+    numericFields: ['STORE_ID', 'COMBO_UNITS_SOLD', 'UNITS_SOLD'],
+    decimalFields: ['BASE_MRP', 'GMV'],
+    columnMapping: null
+  },
+  flipkartSec: {
+    name: 'Flipkart',
+    color: '#2874F0',
+    bgColor: '#E8F4FD',
+    table: 'flipkartSec',
+    columns: ['Product Id', 'SKU ID', 'Category', 'Brand', 'Vertical', 'Order Date', 'Fulfillment Type', 'Location Id', 'Gross Units', 'GMV', 'Cancellation Units', 'Cancellation Amount', 'Return Units', 'Return Amount', 'Final Sale Units', 'Final Sale Amount'],
+    dateColumn: 'Order Date',
+    dateFormat: 'DD-MM-YYYY',
+    dateExample: '21-12-2025',
+    uniqueKey: 'SKU ID,Location Id,Order Date,Fulfillment Type',
+    uniqueKeyFields: ['SKU ID', 'Location Id', 'Order Date', 'Fulfillment Type'],
+    requiredFields: ['SKU ID', 'Location Id'],
+    numericFields: ['Gross Units', 'Cancellation Units', 'Return Units', 'Final Sale Units'],
+    decimalFields: ['GMV', 'Cancellation Amount', 'Return Amount', 'Final Sale Amount'],
+    columnMapping: null
+  },
+  jiomartSec: {
+    name: 'JioMart',
+    color: '#4169E1',
+    bgColor: '#FFFDD0',
+    table: 'jiomartSec',
+    columns: Object.keys(JIOMART_COLUMN_MAP),
+    dateColumn: 'Order Date',
+    dateFormat: 'YYYY-MM-DD HH:MM:SS +TZ',
+    dateExample: '2025-12-05 20:54:13 +0530',
+    uniqueKey: 'ORDER_ID,ORDER_ITEM_ID,TYPE',
+    uniqueKeyFields: ['ORDER_ID', 'ORDER_ITEM_ID', 'TYPE'],
+    requiredFields: ['Order ID', 'Order Item ID'],
+    numericFields: ['Item Quantity'],
+    decimalFields: ['Buyer Invoice Amount', 'Offer Price', 'Seller Coupon Amount', 
+      'Final Invoice Amount (Offer Price minus Seller Coupon Amount)', 
+      'Taxable Value (Final Invoice Amount -Taxes)', 
+      'IGST Rate', 'IGST Amount', 'CGST Rate', 'CGST Amount', 
+      'SGST Rate (or UTGST as applicable)', 'SGST Amount (Or UTGST as applicable)', 
+      'TCS IGST Rate', 'TCS IGST Amount', 'TCS CGST Rate', 'TCS CGST Amount', 
+      'TCS SGST Rate', 'TCS SGST Amount', 'Total TCS Deducted', 
+      'TDS 194O Rate', 'TDS 194O Amount'],
+    dateFields: ['Order Date', 'Order Approval Date', 'Buyer Invoice Date', 'Sale/Sale reversal TCS date'],
+    columnMapping: JIOMART_COLUMN_MAP
+  },
+  bigbasketSec: {
+    name: 'BigBasket',
+    color: '#84C225',
+    bgColor: '#F2F9E8',
+    table: 'bigbasketSec',
+    columns: ['date_range', 'source_city_name', 'brand_name', 'top_slug', 'mid_slug', 'leaf_slug', 'source_sku_id', 'sku_description', 'sku_weight', 'total_quantity', 'total_mrp', 'total_sales'],
+    dateColumn: 'date_range',
+    dateFormat: 'YYYYMMDD - YYYYMMDD',
+    dateExample: '20251226 - 20251226',
+    uniqueKey: 'source_sku_id,source_city_name,date_range',
+    uniqueKeyFields: ['source_sku_id', 'source_city_name', 'date_range'],
+    requiredFields: ['source_sku_id', 'source_city_name'],
+    numericFields: ['total_quantity'],
+    decimalFields: ['total_mrp', 'total_sales'],
+    columnMapping: null
+  },
+  amazon: {
+    name: 'Amazon',
+    color: '#FF9900',
+    bgColor: '#FFF4E6',
+    table: 'amazon_sec_daily', // Will be changed dynamically based on data
+    columns: ['ASIN', 'Product Title', 'Brand', 'Ordered Revenue', 'Ordered Units', 'Shipped Revenue', 'Shipped COGS', 'Shipped Units', 'Customer Returns'],
+    dateColumn: null,
+    dateFormat: 'Auto-detected from metadata',
+    dateExample: 'DD/MM/YY from Viewing Range',
+    uniqueKey: 'business,asin,report_date',
+    uniqueKeyFields: ['business', 'asin', 'report_date'],
+    requiredFields: ['ASIN'],
+    numericFields: ['Ordered Units', 'Shipped Units', 'Customer Returns'],
+    decimalFields: ['Ordered Revenue', 'Shipped Revenue', 'Shipped COGS'],
+    columnMapping: {
+      'ASIN': 'asin',
+      'Product Title': 'product_title',
+      'Brand': 'brand',
+      'Ordered Revenue': 'ordered_revenue',
+      'Ordered Units': 'ordered_units',
+      'Shipped Revenue': 'shipped_revenue',
+      'Shipped COGS': 'shipped_cogs',
+      'Shipped Units': 'shipped_units',
+      'Customer Returns': 'customer_returns'
+    },
+    isAmazon: true
+  }
+};
+
+// Amazon metadata storage (populated during parse)
+let amazonMetadata = {
+  businessEntity: null,
+  fromDate: null,
+  toDate: null
+};
+
+let currentPlatform = 'blinkitSec';
+let currentConfig = PLATFORMS[currentPlatform];
+
+let pasteData = [];
+let csvData = [];
+
+function updatePlatformUI() {
+  const cols = currentConfig.columns;
+  const displayCols = currentConfig.columnMapping ? Object.values(currentConfig.columnMapping) : cols;
+  const html = displayCols.slice(0, 15).map(c => '<code>' + c + '</code>').join(' ') + (displayCols.length > 15 ? ' <code>...</code>' : '');
+  
+  document.getElementById('columns-display-paste').innerHTML = html;
+  document.getElementById('columns-display-csv').innerHTML = html;
+  document.getElementById('col-count-paste').textContent = cols.length;
+  document.getElementById('col-count-csv').textContent = cols.length;
+  
+  const dateInfo = '📅 Date Format: <strong>' + currentConfig.dateFormat + '</strong> (e.g., ' + currentConfig.dateExample + ')';
+  document.getElementById('date-format-paste').innerHTML = dateInfo;
+  document.getElementById('date-format-csv').innerHTML = dateInfo;
+  
+  document.getElementById('platform-name').textContent = currentConfig.name;
+  document.getElementById('table-name').textContent = currentConfig.table;
+  
+  const indicator = document.getElementById('current-platform');
+  indicator.style.background = currentConfig.bgColor;
+  indicator.style.borderColor = currentConfig.color;
+}
+
+document.querySelectorAll('.platform-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentPlatform = this.dataset.platform;
+    currentConfig = PLATFORMS[currentPlatform];
+    
+    // Show/hide Amazon options
+    const amazonOptions = document.getElementById('amazon-options');
+    const isAmazon = currentConfig.isAmazon;
+    amazonOptions.style.display = isAmazon ? 'block' : 'none';
+    
+    // Reset Amazon detected info when switching
+    if (isAmazon) {
+      document.getElementById('amazon-detected-info').style.display = 'none';
+    }
+    
+    updatePlatformUI();
+    clearAllData();
+  });
+});
+
+// Amazon type radio change handler - update table name display
+document.querySelectorAll('input[name="amazon-type"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const type = this.value;
+    const tableName = type === 'daily' ? 'amazon_sec_daily' : 'amazon_sec_range';
+    document.getElementById('table-name').textContent = tableName;
+  });
+});
+
+// Function to update Amazon detected info display
+function updateAmazonDetectedInfo() {
+  const infoDiv = document.getElementById('amazon-detected-info');
+  if (!amazonMetadata.fromDate) {
+    infoDiv.style.display = 'none';
+    return;
+  }
+  
+  document.getElementById('amazon-detected-entity').textContent = '🏢 ' + (amazonMetadata.businessEntity || '-');
+  
+  if (amazonMetadata.fromDate !== amazonMetadata.toDate) {
+    document.getElementById('amazon-detected-dates').textContent = '📆 ' + amazonMetadata.fromDate + ' to ' + amazonMetadata.toDate;
+  } else {
+    document.getElementById('amazon-detected-dates').textContent = '📆 ' + amazonMetadata.fromDate;
+  }
+  
+  infoDiv.style.display = 'block';
+}
+
+updatePlatformUI();
+
+document.getElementById('tab1-btn').addEventListener('click', function() {
+  document.getElementById('tab1-btn').classList.add('active');
+  document.getElementById('tab2-btn').classList.remove('active');
+  document.getElementById('tab1').classList.add('active');
+  document.getElementById('tab2').classList.remove('active');
+});
+
+document.getElementById('tab2-btn').addEventListener('click', function() {
+  document.getElementById('tab2-btn').classList.add('active');
+  document.getElementById('tab1-btn').classList.remove('active');
+  document.getElementById('tab2').classList.add('active');
+  document.getElementById('tab1').classList.remove('active');
+});
+
+function clearAllData() {
+  document.getElementById('paste-input').value = '';
+  document.getElementById('paste-preview').style.display = 'none';
+  document.getElementById('paste-msg').innerHTML = '';
+  document.getElementById('csv-input').value = '';
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-msg').innerHTML = '';
+  pasteData = [];
+  csvData = [];
+  
+  // Clear Amazon metadata
+  amazonMetadata = {
+    businessEntity: null,
+    fromDate: null,
+    toDate: null
+  };
+  document.getElementById('amazon-detected-info').style.display = 'none';
+}
+
+document.getElementById('paste-parse-btn').addEventListener('click', function() {
+  const text = document.getElementById('paste-input').value.trim();
+  if (!text) { showMsg('paste', 'warning', '⚠️ Please paste some data first'); return; }
+  const hasHeader = document.getElementById('paste-header').checked;
+  pasteData = parseData(text, hasHeader);
+  if (pasteData.length > 0) {
+    showPreview('paste', pasteData);
+    showMsg('paste', 'success', '✅ Found ' + pasteData.length + ' rows for ' + currentConfig.name);
+  } else {
+    showMsg('paste', 'error', '❌ No valid data found.');
+  }
+});
+
+document.getElementById('paste-clear-btn').addEventListener('click', function() {
+  document.getElementById('paste-input').value = '';
+  document.getElementById('paste-preview').style.display = 'none';
+  document.getElementById('paste-msg').innerHTML = '';
+  pasteData = [];
+});
+
+document.getElementById('paste-insert-btn').addEventListener('click', function() {
+  insertData('paste', pasteData);
+});
+
+document.getElementById('upload-box').addEventListener('click', function() {
+  document.getElementById('csv-input').click();
+});
+
+document.getElementById('csv-input').addEventListener('change', function(e) {
+  if (e.target.files.length > 0) readFile(e.target.files[0]);
+});
+
+const uploadBox = document.getElementById('upload-box');
+uploadBox.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = '#3ECF8E'; });
+uploadBox.addEventListener('dragleave', function() { this.style.borderColor = '#ccc'; });
+uploadBox.addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.style.borderColor = '#ccc';
+  if (e.dataTransfer.files.length > 0) readFile(e.dataTransfer.files[0]);
+});
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const hasHeader = document.getElementById('csv-header').checked;
+    csvData = parseData(e.target.result, hasHeader);
+    if (csvData.length > 0) {
+      showPreview('csv', csvData);
+      showMsg('csv', 'success', '✅ Found ' + csvData.length + ' rows from ' + file.name);
+    } else {
+      showMsg('csv', 'error', '❌ No valid data found in file');
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('csv-clear-btn').addEventListener('click', function() {
+  document.getElementById('csv-input').value = '';
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-msg').innerHTML = '';
+  csvData = [];
+});
+
+document.getElementById('csv-insert-btn').addEventListener('click', function() {
+  insertData('csv', csvData);
+});
+
+function parseCSVLine(line, delim) {
+  if (delim === '\t') {
+    return line.split('\t').map(v => v.trim().replace(/^["']|["']$/g, '').replace(/^\uFEFF/, ''));
+  }
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') { inQuotes = !inQuotes; }
+    else if (char === ',' && !inQuotes) { result.push(current.trim().replace(/^["']|["']$/g, '').replace(/^\uFEFF/, '')); current = ''; }
+    else { current += char; }
+  }
+  result.push(current.trim().replace(/^["']|["']$/g, '').replace(/^\uFEFF/, ''));
+  return result;
+}
+
+function formatDate(str, platform) {
+  if (!str) return null;
+  str = String(str).trim();
+  
+  // YYYYMMDD - YYYYMMDD -> YYYY-MM-DD (takes end date after -)
+  let m = str.match(/^\d{8}\s*-\s*(\d{4})(\d{2})(\d{2})$/);
+  if (m) return m[1] + '-' + m[2] + '-' + m[3];
+  
+  // DD-MM-YYYY -> YYYY-MM-DD
+  m = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  
+  // DD/MM/YYYY -> YYYY-MM-DD
+  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  
+  // YYYY-MM-DD HH:MM:SS +TZ -> YYYY-MM-DD
+  m = str.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+  
+  // YYYYMMDD -> YYYY-MM-DD
+  m = str.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (m) return m[1] + '-' + m[2] + '-' + m[3];
+  
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  
+  return str;
+}
+
+function parseData(text, hasHeader) {
+  const COLS = currentConfig.columns;
+  const dateFields = currentConfig.dateFields || [];
+  const mapping = currentConfig.columnMapping;
+  
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  let lines = text.split('\n').filter(line => line.trim().length > 0);
+  if (lines.length === 0) return [];
+  
+  // Amazon metadata extraction from first row
+  if (currentConfig.isAmazon && lines.length > 0) {
+    const metaLine = lines[0];
+    
+    // Check if first line is metadata row (contains Businesses= or Viewing Range=)
+    if (metaLine.includes('Businesses=') || metaLine.includes('Viewing Range=')) {
+      // Extract Business Entity
+      let entityMatch = metaLine.match(/Businesses=\[([^\]]+)\]/);
+      if (entityMatch) {
+        amazonMetadata.businessEntity = entityMatch[1].replace(/\.$/, '').trim();
+      }
+      
+      // Extract Viewing Range: Viewing Range=[30/12/25 - 30/12/25]
+      let rangeMatch = metaLine.match(/Viewing Range=\[([^\]]+)\]/);
+      if (rangeMatch) {
+        const rangeParts = rangeMatch[1].split(' - ');
+        if (rangeParts.length === 2) {
+          const parseAmazonDate = (dateStr) => {
+            const m = dateStr.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+            if (m) {
+              const year = parseInt(m[3]) > 50 ? '19' + m[3] : '20' + m[3];
+              return year + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+            }
+            return dateStr;
+          };
+          
+          amazonMetadata.fromDate = parseAmazonDate(rangeParts[0]);
+          amazonMetadata.toDate = parseAmazonDate(rangeParts[1]);
+          
+          updateAmazonDetectedInfo();
+        }
+      }
+      
+      // Remove metadata row
+      lines = lines.slice(1);
+    }
+  }
+  
+  // Now detect delimiter from remaining data (header or data row)
+  const firstLine = lines[0] || '';
+  let delim = '\t';
+  if (firstLine.indexOf('\t') === -1 && firstLine.indexOf(',') > -1) delim = ',';
+  
+  let headers = [];
+  let startIdx = 0;
+  
+  if (hasHeader && lines.length > 0) {
+    headers = parseCSVLine(lines[0], delim);
+    startIdx = 1;
+    console.log('Headers found:', headers.length, headers);
+  }
+  
+  // Build header index map
+  const headerMap = {};
+  
+  // For Amazon, use strict positional mapping since format is known
+  if (currentConfig.isAmazon) {
+    for (let i = 0; i < COLS.length; i++) {
+      headerMap[COLS[i]] = i;
+    }
+    console.log('Amazon using positional mapping:', headerMap);
+  } else {
+    for (let i = 0; i < COLS.length; i++) {
+      const col = COLS[i];
+      let foundIdx = -1;
+      
+      // Exact match
+      for (let j = 0; j < headers.length; j++) {
+        if (headers[j] === col) { foundIdx = j; break; }
+      }
+      
+      // Case-insensitive
+      if (foundIdx === -1) {
+        for (let j = 0; j < headers.length; j++) {
+          if (headers[j].toLowerCase() === col.toLowerCase()) { foundIdx = j; break; }
+        }
+      }
+      
+      // Partial match (clean alphanumeric)
+      if (foundIdx === -1) {
+        const colClean = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+        for (let j = 0; j < headers.length; j++) {
+          const hdrClean = headers[j].toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (hdrClean === colClean || hdrClean.includes(colClean) || colClean.includes(hdrClean)) { foundIdx = j; break; }
+        }
+      }
+      
+      if (foundIdx === -1) foundIdx = i;
+      headerMap[col] = foundIdx;
+    }
+  }
+  
+  const result = [];
+  
+  for (let i = startIdx; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i], delim);
+    if (vals.length < 3) continue;
+    
+    // Skip header row for Amazon (in case it wasn't caught by hasHeader)
+    if (currentConfig.isAmazon && vals[0] && vals[0].toUpperCase() === 'ASIN') {
+      console.log('Skipping Amazon header row');
+      continue;
+    }
+    
+    const row = {};
+    
+    for (let j = 0; j < COLS.length; j++) {
+      const col = COLS[j];
+      const idx = headerMap[col];
+      let val = (idx < vals.length) ? vals[idx] : null;
+      
+      if (val === '' || val === undefined) val = null;
+      
+      // Numeric
+      if (val !== null && currentConfig.numericFields && currentConfig.numericFields.includes(col)) {
+        val = parseInt(String(val).replace(/[^\d-]/g, ''));
+        if (isNaN(val)) val = null;
+      }
+      
+      // Decimal
+      if (val !== null && currentConfig.decimalFields && currentConfig.decimalFields.includes(col)) {
+        val = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+        if (isNaN(val)) val = null;
+      }
+      
+      // Date
+      if (val !== null && (col === currentConfig.dateColumn || dateFields.includes(col))) {
+        val = formatDate(val, currentPlatform);
+      }
+      
+      // Apply column mapping (CSV name -> DB name)
+      const dbCol = mapping ? mapping[col] : col;
+      if (dbCol) row[dbCol] = val;
+    }
+    
+    // Check required fields
+    let hasRequired = true;
+    for (const req of currentConfig.requiredFields) {
+      const dbReq = mapping ? mapping[req] : req;
+      if (!row[dbReq]) { hasRequired = false; break; }
+    }
+    
+    if (hasRequired) result.push(row);
+  }
+  
+  return result;
+}
+
+// Deduplicate data based on unique key fields
+function deduplicateData(data) {
+  const keyFields = currentConfig.uniqueKeyFields;
+  if (!keyFields || keyFields.length === 0) return data;
+  
+  const seen = new Map();
+  
+  for (const row of data) {
+    // Build unique key from fields
+    const keyParts = keyFields.map(field => {
+      const val = row[field];
+      return val !== null && val !== undefined ? String(val) : '';
+    });
+    const key = keyParts.join('|||');
+    
+    // Keep last occurrence (overwrites previous)
+    seen.set(key, row);
+  }
+  
+  return Array.from(seen.values());
+}
+
+function showPreview(type, data) {
+  const table = document.getElementById(type + '-table');
+  const preview = document.getElementById(type + '-preview');
+  const count = document.getElementById(type + '-count');
+  
+  const firstRow = data[0] || {};
+  const allCols = Object.keys(firstRow);
+  const showCols = allCols.slice(0, 10);
+  
+  let thead = '<tr>';
+  showCols.forEach(col => thead += '<th>' + col + '</th>');
+  if (allCols.length > 10) thead += '<th>...</th>';
+  thead += '</tr>';
+  table.querySelector('thead').innerHTML = thead;
+  
+  let tbody = '';
+  data.slice(0, 50).forEach(row => {
+    tbody += '<tr>';
+    showCols.forEach(col => {
+      let val = row[col] ?? '';
+      if (String(val).length > 20) val = String(val).substring(0, 20) + '...';
+      tbody += '<td>' + val + '</td>';
+    });
+    if (allCols.length > 10) tbody += '<td>...</td>';
+    tbody += '</tr>';
+  });
+  table.querySelector('tbody').innerHTML = tbody;
+  
+  count.textContent = data.length + ' rows';
+  preview.style.display = 'block';
+}
+
+function showMsg(type, msgType, text) {
+  document.getElementById(type + '-msg').innerHTML = '<div class="msg msg-' + msgType + '">' + text + '</div>';
+}
+
+async function insertData(type, data) {
+  if (data.length === 0) { showMsg(type, 'warning', '⚠️ No data to insert'); return; }
+
+  // Amazon validation
+  if (currentConfig.isAmazon) {
+    if (!amazonMetadata.businessEntity) {
+      showMsg(type, 'error', '❌ Could not detect Business Entity from data. Make sure the metadata row is included.');
+      return;
+    }
+    if (!amazonMetadata.fromDate) {
+      showMsg(type, 'error', '❌ Could not detect date from data. Make sure the metadata row is included.');
+      return;
+    }
+  }
+
+  const useUpsert = document.getElementById(type + '-upsert').checked;
+  const progress = document.getElementById(type + '-progress');
+  const progressFill = document.getElementById(type + '-progress-fill');
+
+  document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+  progress.style.display = 'block';
+
+  // Determine table for Amazon based on MANUAL selection (radio button)
+  let targetTable = currentConfig.table;
+  let targetUniqueKey = currentConfig.uniqueKey;
+  if (currentConfig.isAmazon) {
+    const amazonType = document.querySelector('input[name="amazon-type"]:checked').value;
+    const isRange = amazonType === 'range';
+    targetTable = isRange ? 'amazon_sec_range' : 'amazon_sec_daily';
+    targetUniqueKey = isRange ? 'business,asin,from_date,to_date' : 'business,asin,report_date';
+  }
+
+  showMsg(type, 'warning', '⏳ Inserting to ' + targetTable + '...');
+
+  // Add Amazon-specific fields
+  let processedData = data;
+  if (currentConfig.isAmazon) {
+    const amazonType = document.querySelector('input[name="amazon-type"]:checked').value;
+    const isRange = amazonType === 'range';
+    if (isRange) {
+      processedData = data.map(row => ({ ...row, business: amazonMetadata.businessEntity, from_date: amazonMetadata.fromDate, to_date: amazonMetadata.toDate }));
+    } else {
+      processedData = data.map(row => ({ ...row, business: amazonMetadata.businessEntity, report_date: amazonMetadata.fromDate }));
+    }
+  }
+
+  // Deduplicate
+  const dedupedData = deduplicateData(processedData);
+  const duplicatesRemoved = processedData.length - dedupedData.length;
+  if (duplicatesRemoved > 0) console.log('Removed ' + duplicatesRemoved + ' duplicate rows');
+
+  // Send to backend API
+  let success = 0, failed = 0, lastError = '';
+
+  try {
+    const res = await fetch(API_BASE + '/api/upload/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table: targetTable,
+        data: dedupedData,
+        unique_key: useUpsert ? targetUniqueKey : null,
+        upsert: useUpsert
+      })
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      failed = dedupedData.length;
+      lastError = result.detail || 'Upload failed';
+    } else {
+      success = result.success || 0;
+      failed = result.failed || 0;
+      lastError = result.error || '';
+    }
+  } catch (err) {
+    failed = dedupedData.length;
+    lastError = err.message;
+  }
+
+  progressFill.style.width = '100%';
+  progressFill.textContent = '100%';
+  setTimeout(() => { progress.style.display = 'none'; }, 500);
+  document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+
+  let msg = '';
+  if (failed === 0) {
+    msg = '✅ Inserted ' + success + ' rows to ' + targetTable;
+    if (duplicatesRemoved > 0) msg += ' (' + duplicatesRemoved + ' duplicates merged)';
+    showMsg(type, 'success', msg);
+  } else if (success > 0) {
+    msg = '⚠️ Inserted ' + success + ', failed ' + failed + ': ' + lastError;
+    showMsg(type, 'warning', msg);
+  } else {
+    showMsg(type, 'error', '❌ Failed: ' + lastError);
+  }
+}
+
+console.log('Multi-platform script loaded');
+</script>
+</body>
+</html>

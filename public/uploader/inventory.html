@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Platform Inventory Entry</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f7fa; }
+    h1 { text-align: center; color: #333; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+    
+    .platform-selector { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .platform-btn { padding: 12px 20px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; background: #fff; transition: all 0.3s; }
+    .platform-btn:hover { border-color: #999; }
+    .platform-btn.active { border-color: #3ECF8E; background: #f0fff5; color: #2db87a; }
+    .platform-btn[data-platform="blinkitInv"] { border-left: 4px solid #F9C22E; }
+    .platform-btn[data-platform="zeptoInv"] { border-left: 4px solid #8B5CF6; }
+    .platform-btn[data-platform="swiggyInv"] { border-left: 4px solid #FC8019; }
+    .platform-btn[data-platform="bigbasketInv"] { border-left: 4px solid #84C225; }
+    .platform-btn[data-platform="jiomartInv"] { border-left: 4px solid #0078AD; }
+    .platform-btn[data-platform="amazonInv"] { border-left: 4px solid #FF9900; }
+    
+    .current-platform { text-align: center; padding: 10px; margin-bottom: 15px; border-radius: 8px; font-weight: bold; }
+    
+    .date-selector { background: #fff; padding: 15px 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .date-selector label { font-weight: bold; color: #333; }
+    .date-selector input[type="date"] { padding: 10px 15px; border: 2px solid #3ECF8E; border-radius: 6px; font-size: 14px; }
+    .date-selector input[type="date"]:focus { border-color: #2db87a; outline: none; }
+    .date-selector input[type="date"]:disabled { background: #f0f0f0; border-color: #ccc; }
+    .date-selector .date-note { font-size: 13px; color: #666; }
+    .date-required { color: #dc3545; font-weight: bold; }
+    
+    .tabs { display: flex; gap: 5px; }
+    .tab-btn { padding: 12px 24px; background: #ddd; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 15px; font-weight: bold; }
+    .tab-btn:hover { background: #ccc; }
+    .tab-btn.active { background: #fff; color: #3ECF8E; }
+    
+    .tab-panel { display: none; background: #fff; padding: 20px; border-radius: 0 8px 8px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .tab-panel.active { display: block; }
+    
+    textarea { width: 100%; min-height: 180px; padding: 12px; border: 2px dashed #ccc; border-radius: 8px; font-family: monospace; font-size: 13px; margin: 10px 0; }
+    textarea:focus { border-color: #3ECF8E; outline: none; }
+    
+    .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-right: 10px; margin-top: 10px; }
+    .btn-green { background: #3ECF8E; color: #fff; }
+    .btn-green:hover { background: #2db87a; }
+    .btn-gray { background: #6c757d; color: #fff; }
+    .btn-gray:hover { background: #5a6268; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    
+    .upload-box { border: 2px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; background: #fafafa; margin: 10px 0; }
+    .upload-box:hover { border-color: #3ECF8E; background: #f0fff5; }
+    .upload-box input { display: none; }
+    
+    .settings { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .settings label { margin-right: 20px; cursor: pointer; }
+    .settings input[type="checkbox"] { margin-right: 5px; }
+    
+    .info { background: #e7f5ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+    .info code { background: #d0ebff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+    
+    .columns-display { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; max-height: 80px; overflow-y: auto; }
+    .columns-display code { background: #d0ebff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+    
+    .table-container { margin-top: 20px; max-height: 350px; overflow: auto; border: 1px solid #ddd; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
+    th { background: #f8f9fa; position: sticky; top: 0; font-size: 10px; }
+    
+    .msg { padding: 12px; border-radius: 6px; margin-top: 15px; }
+    .msg-success { background: #d4edda; color: #155724; }
+    .msg-error { background: #f8d7da; color: #721c24; }
+    .msg-warning { background: #fff3cd; color: #856404; }
+    
+    .progress { margin-top: 15px; display: none; }
+    .progress-bar { height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #3ECF8E; text-align: center; color: #fff; font-size: 12px; line-height: 20px; transition: width 0.3s; }
+    
+    .row-badge { background: #3ECF8E; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+    
+    .platform-note { padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 15px; }
+    .blinkit-note { background: #FEF9E7; border-left: 3px solid #F9C22E; color: #856404; }
+    .amazon-note { background: #FFF4E6; border-left: 3px solid #FF9900; color: #856404; }
+    
+    .amazon-detected { background: #fff; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #FF9900; display: none; }
+    .amazon-detected .detected-item { display: inline-block; margin-right: 20px; }
+    .amazon-detected .detected-label { font-weight: bold; color: #666; }
+    .amazon-detected .detected-value { color: #FF9900; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h1>📦 Jivo Inventory Management</h1>
+<p class="subtitle">Multi-Platform Inventory Upload Tool</p>
+
+<div class="platform-selector">
+  <button class="platform-btn active" data-platform="blinkitInv">🟡 Blinkit</button>
+  <button class="platform-btn" data-platform="zeptoInv">🟣 Zepto</button>
+  <button class="platform-btn" data-platform="swiggyInv">🟠 Swiggy</button>
+  <button class="platform-btn" data-platform="bigbasketInv">🟢 BigBasket</button>
+  <button class="platform-btn" data-platform="jiomartInv">🔵 JioMart</button>
+  <button class="platform-btn" data-platform="amazonInv">🟠 Amazon</button>
+</div>
+
+<div class="current-platform" id="current-platform" style="background: #FEF9E7; border: 2px solid #F9C22E;">
+  📦 Currently Selected: <span id="platform-name">Blinkit</span> | Table: <span id="table-name">blinkit_inventory</span>
+</div>
+
+<!-- Date Selector - Hidden for Amazon -->
+<div class="date-selector" id="date-selector">
+  <label for="inventory-date">📅 Inventory Date: <span class="date-required">*</span></label>
+  <input type="date" id="inventory-date" required>
+  <span class="date-note" id="date-note">Select the date this inventory data represents (defaults to today)</span>
+</div>
+
+<!-- Amazon Auto-Detection Display -->
+<div class="amazon-detected" id="amazon-detected">
+  <span class="detected-item">
+    <span class="detected-label">🏢 Entity:</span>
+    <span class="detected-value" id="detected-entity">—</span>
+  </span>
+  <span class="detected-item">
+    <span class="detected-label">📅 Date:</span>
+    <span class="detected-value" id="detected-date">—</span>
+  </span>
+  <span class="detected-item">
+    <span class="detected-label">📊 Table:</span>
+    <span class="detected-value" id="detected-table">—</span>
+  </span>
+</div>
+
+<!-- Platform specific notes -->
+<div class="platform-note blinkit-note" id="blinkit-note">
+  💡 <strong>Blinkit:</strong> The raw <code>created_at</code> from your data will also be stored separately for audit purposes.
+</div>
+
+<div class="platform-note amazon-note" id="amazon-note" style="display:none;">
+  💡 <strong>Amazon:</strong> Entity (JMPL/JWPL) and Date will be <strong>auto-detected</strong> from the first row of your data. No need to select date manually.
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tab1-btn">📋 Copy/Paste</button>
+  <button class="tab-btn" id="tab2-btn">📄 CSV Upload</button>
+</div>
+
+<div class="tab-panel active" id="tab1">
+  <div class="info">
+    <strong>📋 How to use:</strong> Select platform → Set inventory date → Copy from Excel → Paste below → Parse → Insert<br>
+    <strong>Expected Columns (<span id="col-count-paste">8</span>):</strong>
+    <div class="columns-display" id="columns-display-paste"></div>
+  </div>
+  <div class="settings">
+    <strong>⚙️ Settings:</strong>
+    <label><input type="checkbox" id="paste-header" checked> First row is header</label>
+    <label><input type="checkbox" id="paste-upsert" checked> Update existing (Upsert)</label>
+  </div>
+  <textarea id="paste-input" placeholder="Paste your Excel/Sheets data here..."></textarea>
+  <div>
+    <button class="btn btn-green" id="paste-parse-btn">Parse Data</button>
+    <button class="btn btn-gray" id="paste-clear-btn">Clear</button>
+  </div>
+  <div id="paste-preview" style="display:none;">
+    <h3>📊 Preview <span class="row-badge" id="paste-count">0 rows</span></h3>
+    <div class="table-container"><table id="paste-table"><thead></thead><tbody></tbody></table></div>
+    <button class="btn btn-green" id="paste-insert-btn" style="margin-top:15px;">Insert All Data</button>
+  </div>
+  <div class="progress" id="paste-progress"><div class="progress-bar"><div class="progress-fill" id="paste-progress-fill">0%</div></div></div>
+  <div id="paste-msg"></div>
+</div>
+
+<div class="tab-panel" id="tab2">
+  <div class="info">
+    <strong>📄 Upload CSV/TSV file</strong><br>
+    <strong>Expected Columns (<span id="col-count-csv">8</span>):</strong>
+    <div class="columns-display" id="columns-display-csv"></div>
+  </div>
+  <div class="settings">
+    <strong>⚙️ Settings:</strong>
+    <label><input type="checkbox" id="csv-header" checked> First row is header</label>
+    <label><input type="checkbox" id="csv-upsert" checked> Update existing (Upsert)</label>
+  </div>
+  <div class="upload-box" id="upload-box">
+    <input type="file" id="csv-input" accept=".csv,.tsv,.txt">
+    <div style="font-size:40px;">📁</div>
+    <div>Click to upload or drag & drop</div>
+    <div style="font-size:12px;color:#999;">CSV, TSV files</div>
+  </div>
+  <div id="csv-preview" style="display:none;">
+    <h3>📊 Preview <span class="row-badge" id="csv-count">0 rows</span></h3>
+    <div class="table-container"><table id="csv-table"><thead></thead><tbody></tbody></table></div>
+    <div>
+      <button class="btn btn-green" id="csv-insert-btn">Insert All Data</button>
+      <button class="btn btn-gray" id="csv-clear-btn">Clear</button>
+    </div>
+  </div>
+  <div class="progress" id="csv-progress"><div class="progress-bar"><div class="progress-fill" id="csv-progress-fill">0%</div></div></div>
+  <div id="csv-msg"></div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8000';
+
+// Amazon column mapping (shared between JMPL and JWPL)
+const AMAZON_COLUMN_MAPPING = {
+  'ASIN': 'asin',
+  'Product Title': 'product_title',
+  'Brand': 'brand',
+  'Sourceable Product OOS %': 'sourceable_product_oos_pct',
+  'Vendor Confirmation %': 'vendor_confirmation_pct',
+  'Net Received': 'net_received',
+  'Net Received Units': 'net_received_units',
+  'Open Purchase Order Quantity': 'open_purchase_order_quantity',
+  'Receive Fill %': 'receive_fill_pct',
+  'Overall Vendor Lead Time (days)': 'overall_vendor_lead_time_days',
+  'Unfilled Customer Ordered Units': 'unfilled_customer_ordered_units',
+  'Aged 90+ Days Sellable Inventory': 'aged_90_days_sellable_inventory',
+  'Aged 90+ Days Sellable Units': 'aged_90_days_sellable_units',
+  'Sellable On-Hand Inventory': 'sellable_on_hand_inventory',
+  'Sellable On Hand Units': 'sellable_on_hand_units',
+  'Unsellable On-Hand Inventory': 'unsellable_on_hand_inventory',
+  'Unsellable On-Hand Units': 'unsellable_on_hand_units'
+};
+
+const AMAZON_COLUMNS = Object.keys(AMAZON_COLUMN_MAPPING);
+
+// Platform Configurations
+const PLATFORMS = {
+  blinkitInv: {
+    name: 'Blinkit',
+    color: '#F9C22E',
+    bgColor: '#FEF9E7',
+    table: 'blinkit_inventory',
+    columns: ['created_at', 'backend_facility_name', 'backend_facility_id', 'item_id', 'item_name', 'backend_inv_qty', 'frontend_inv_qty', 'Total'],
+    rawDateColumn: 'created_at',
+    uniqueKey: 'inventory_date,backend_facility_id,item_id',
+    uniqueKeyFields: ['inventory_date', 'backend_facility_id', 'item_id'],
+    requiredFields: ['backend_facility_id', 'item_id'],
+    numericFields: ['backend_inv_qty', 'frontend_inv_qty'],
+    decimalFields: [],
+    ignoreFields: ['Total'],
+    columnMapping: {
+      'created_at': 'raw_created_at',
+      'backend_facility_name': 'backend_facility_name',
+      'backend_facility_id': 'backend_facility_id',
+      'item_id': 'item_id',
+      'item_name': 'item_name',
+      'backend_inv_qty': 'backend_inv_qty',
+      'frontend_inv_qty': 'frontend_inv_qty'
+    },
+    showBlinkitNote: true,
+    isAmazon: false
+  },
+  zeptoInv: {
+    name: 'Zepto',
+    color: '#8B5CF6',
+    bgColor: '#F3E8FF',
+    table: 'zepto_inventory',
+    columns: ['City', 'SKU Name', 'SKU Code', 'EAN', 'SKU Category', 'SKU Sub Category', 'Brand Name', 'Manufacturer Name', 'Manufacturer ID', 'Units'],
+    rawDateColumn: null,
+    uniqueKey: 'inventory_date,city,sku_code',
+    uniqueKeyFields: ['inventory_date', 'city', 'sku_code'],
+    requiredFields: ['City', 'SKU Code'],
+    numericFields: ['Units'],
+    decimalFields: [],
+    ignoreFields: [],
+    columnMapping: {
+      'City': 'city',
+      'SKU Name': 'sku_name',
+      'SKU Code': 'sku_code',
+      'EAN': 'ean',
+      'SKU Category': 'sku_category',
+      'SKU Sub Category': 'sku_sub_category',
+      'Brand Name': 'brand_name',
+      'Manufacturer Name': 'manufacturer_name',
+      'Manufacturer ID': 'manufacturer_id',
+      'Units': 'units'
+    },
+    showBlinkitNote: false,
+    isAmazon: false
+  },
+  swiggyInv: {
+    name: 'Swiggy Instamart',
+    color: '#FC8019',
+    bgColor: '#FFF4E6',
+    table: 'swiggy_inventory',
+    columns: ['StorageType', 'FacilityName', 'City', 'SkuCode', 'SkuDescription', 'L1', 'L2', 'ShelfLifeDays', 'BusinessCategory', 'DaysOnHand', 'PotentialGmvLoss', 'OpenPos', 'OpenPoQuantity', 'WarehouseQtyAvailable'],
+    rawDateColumn: null,
+    uniqueKey: 'inventory_date,facility_name,sku_code,storage_type',
+    uniqueKeyFields: ['inventory_date', 'facility_name', 'sku_code', 'storage_type'],
+    requiredFields: ['FacilityName', 'SkuCode'],
+    numericFields: ['ShelfLifeDays', 'DaysOnHand', 'OpenPos', 'OpenPoQuantity', 'WarehouseQtyAvailable'],
+    decimalFields: ['PotentialGmvLoss'],
+    ignoreFields: [],
+    columnMapping: {
+      'StorageType': 'storage_type',
+      'FacilityName': 'facility_name',
+      'City': 'city',
+      'SkuCode': 'sku_code',
+      'SkuDescription': 'sku_description',
+      'L1': 'l1',
+      'L2': 'l2',
+      'ShelfLifeDays': 'shelf_life_days',
+      'BusinessCategory': 'business_category',
+      'DaysOnHand': 'days_on_hand',
+      'PotentialGmvLoss': 'potential_gmv_loss',
+      'OpenPos': 'open_pos',
+      'OpenPoQuantity': 'open_po_quantity',
+      'WarehouseQtyAvailable': 'warehouse_qty_available'
+    },
+    showBlinkitNote: false,
+    isAmazon: false
+  },
+  bigbasketInv: {
+    name: 'BigBasket',
+    color: '#84C225',
+    bgColor: '#F2F9E8',
+    table: 'bigbasket_inventory',
+    columns: ['city', 'sku_id', 'brand_name', 'sku_name', 'sku_weight', 'sku_pack_type', 'sku_description', 'top_category_name', 'mid_category_name', 'leaf_category_name', 'soh', 'soh_value'],
+    rawDateColumn: null,
+    uniqueKey: 'inventory_date,city,sku_id',
+    uniqueKeyFields: ['inventory_date', 'city', 'sku_id'],
+    requiredFields: ['city', 'sku_id'],
+    numericFields: ['soh'],
+    decimalFields: ['soh_value'],
+    ignoreFields: [],
+    columnMapping: null,
+    showBlinkitNote: false,
+    isAmazon: false
+  },
+  jiomartInv: {
+    name: 'JioMart',
+    color: '#0078AD',
+    bgColor: '#E6F3F8',
+    table: 'jiomart_inventory',
+    columns: ['RFC Name', 'SKU ID', 'Title', 'Category', 'Product Status', 'Last updated at', 'TOTAL_SELLABLE_INV', 'TOTAL_UNSELLABLE_INV', 'FC_DMG_INV', 'LSP_DMG_INV', 'CUST_DMG_INV', 'RECVD_DMG', 'EXPIRED_INV', 'OTHER_UNSELLABLE_INV', 'MTD_FWD_INTRANSIT', 'MTD_DELVD_CUST', 'MTD_RET_INTRANSIT', 'MTD_ORDER_COUNT'],
+    rawDateColumn: 'Last updated at',
+    uniqueKey: 'inventory_date,rfc_name,sku_id',
+    uniqueKeyFields: ['inventory_date', 'rfc_name', 'sku_id'],
+    requiredFields: ['RFC Name', 'SKU ID'],
+    numericFields: ['TOTAL_SELLABLE_INV', 'TOTAL_UNSELLABLE_INV', 'FC_DMG_INV', 'LSP_DMG_INV', 'CUST_DMG_INV', 'RECVD_DMG', 'EXPIRED_INV', 'OTHER_UNSELLABLE_INV', 'MTD_FWD_INTRANSIT', 'MTD_DELVD_CUST', 'MTD_RET_INTRANSIT', 'MTD_ORDER_COUNT'],
+    decimalFields: [],
+    ignoreFields: [],
+    columnMapping: {
+      'RFC Name': 'rfc_name',
+      'SKU ID': 'sku_id',
+      'Title': 'title',
+      'Category': 'category',
+      'Product Status': 'product_status',
+      'Last updated at': 'last_updated_at',
+      'TOTAL_SELLABLE_INV': 'total_sellable_inv',
+      'TOTAL_UNSELLABLE_INV': 'total_unsellable_inv',
+      'FC_DMG_INV': 'fc_dmg_inv',
+      'LSP_DMG_INV': 'lsp_dmg_inv',
+      'CUST_DMG_INV': 'cust_dmg_inv',
+      'RECVD_DMG': 'recvd_dmg',
+      'EXPIRED_INV': 'expired_inv',
+      'OTHER_UNSELLABLE_INV': 'other_unsellable_inv',
+      'MTD_FWD_INTRANSIT': 'mtd_fwd_intransit',
+      'MTD_DELVD_CUST': 'mtd_delvd_cust',
+      'MTD_RET_INTRANSIT': 'mtd_ret_intransit',
+      'MTD_ORDER_COUNT': 'mtd_order_count'
+    },
+    showBlinkitNote: false,
+    isAmazon: false
+  },
+  amazonInv: {
+    name: 'Amazon',
+    color: '#FF9900',
+    bgColor: '#FFF4E6',
+    table: 'amazon_inventory',
+    columns: AMAZON_COLUMNS,
+    rawDateColumn: null,
+    uniqueKey: 'inventory_date,asin,business',
+    uniqueKeyFields: ['inventory_date', 'asin', 'business'],
+    requiredFields: ['ASIN'],
+    numericFields: ['Net Received Units', 'Open Purchase Order Quantity', 'Overall Vendor Lead Time (days)', 'Unfilled Customer Ordered Units', 'Aged 90+ Days Sellable Units', 'Sellable On Hand Units', 'Unsellable On-Hand Units'],
+    decimalFields: ['Net Received', 'Aged 90+ Days Sellable Inventory', 'Sellable On-Hand Inventory', 'Unsellable On-Hand Inventory'],
+    textFields: ['Sourceable Product OOS %', 'Vendor Confirmation %', 'Receive Fill %'],  // Keep as text to preserve %
+    ignoreFields: [],
+    columnMapping: AMAZON_COLUMN_MAPPING,
+    showBlinkitNote: false,
+    isAmazon: true
+  }
+};
+
+let currentPlatform = 'blinkitInv';
+let currentConfig = PLATFORMS[currentPlatform];
+// Amazon detection results (stored globally for insert)
+let amazonDetected = {
+  entity: null,
+  business: null,
+  table: 'amazon_inventory',
+  date: null,
+  rawViewingRange: null
+};
+
+let pasteData = [];
+let csvData = [];
+
+// Set default date to today
+function setDefaultDate() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inventory-date').value = today;
+}
+setDefaultDate();
+
+function updatePlatformUI() {
+  const cols = currentConfig.columns.filter(c => !currentConfig.ignoreFields.includes(c));
+  const displayCols = currentConfig.columnMapping 
+    ? cols.map(c => currentConfig.columnMapping[c] || c)
+    : cols;
+  const html = displayCols.slice(0, 12).map(c => '<code>' + c + '</code>').join(' ') + (displayCols.length > 12 ? ' <code>+' + (displayCols.length - 12) + ' more</code>' : '');
+  
+  document.getElementById('columns-display-paste').innerHTML = html;
+  document.getElementById('columns-display-csv').innerHTML = html;
+  document.getElementById('col-count-paste').textContent = cols.length;
+  document.getElementById('col-count-csv').textContent = cols.length;
+  
+  document.getElementById('platform-name').textContent = currentConfig.name;
+  document.getElementById('table-name').textContent = currentConfig.isAmazon ? 'amazon_inventory' : currentConfig.table;
+  
+  const indicator = document.getElementById('current-platform');
+  indicator.style.background = currentConfig.bgColor;
+  indicator.style.borderColor = currentConfig.color;
+  
+  // Show/hide notes
+  document.getElementById('blinkit-note').style.display = currentConfig.showBlinkitNote ? 'block' : 'none';
+  document.getElementById('amazon-note').style.display = currentConfig.isAmazon ? 'block' : 'none';
+  
+  // Show/hide date selector for Amazon
+  const dateSelector = document.getElementById('date-selector');
+  const dateInput = document.getElementById('inventory-date');
+  const dateNote = document.getElementById('date-note');
+  
+  if (currentConfig.isAmazon) {
+    dateSelector.style.display = 'none';
+  } else {
+    dateSelector.style.display = 'flex';
+    dateInput.disabled = false;
+    dateNote.textContent = 'Select the date this inventory data represents (defaults to today)';
+  }
+  
+  // Hide Amazon detected info when switching platforms
+  document.getElementById('amazon-detected').style.display = 'none';
+}
+
+document.querySelectorAll('.platform-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentPlatform = this.dataset.platform;
+    currentConfig = PLATFORMS[currentPlatform];
+    updatePlatformUI();
+    clearAllData();
+  });
+});
+
+updatePlatformUI();
+
+// Tab switching
+document.getElementById('tab1-btn').addEventListener('click', function() {
+  document.getElementById('tab1-btn').classList.add('active');
+  document.getElementById('tab2-btn').classList.remove('active');
+  document.getElementById('tab1').classList.add('active');
+  document.getElementById('tab2').classList.remove('active');
+});
+
+document.getElementById('tab2-btn').addEventListener('click', function() {
+  document.getElementById('tab2-btn').classList.add('active');
+  document.getElementById('tab1-btn').classList.remove('active');
+  document.getElementById('tab2').classList.add('active');
+  document.getElementById('tab1').classList.remove('active');
+});
+
+function clearAllData() {
+  document.getElementById('paste-input').value = '';
+  document.getElementById('paste-preview').style.display = 'none';
+  document.getElementById('paste-msg').innerHTML = '';
+  document.getElementById('csv-input').value = '';
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-msg').innerHTML = '';
+  document.getElementById('amazon-detected').style.display = 'none';
+  pasteData = [];
+  csvData = [];
+  amazonDetected = { entity: null, business: null, table: 'amazon_inventory', date: null, rawViewingRange: null };
+}
+
+// Validate date selection (not needed for Amazon)
+function validateDate() {
+  if (currentConfig.isAmazon) {
+    return amazonDetected.date;  // Use auto-detected date
+  }
+  const dateVal = document.getElementById('inventory-date').value;
+  if (!dateVal) {
+    return false;
+  }
+  return dateVal;
+}
+
+// Parse Amazon metadata from first row
+function parseAmazonMetadata(firstLine) {
+  const result = {
+    entity: null,
+    business: null,  // Actual value to insert in DB
+    table: 'amazon_inventory',  // Single table for all
+    date: null,
+    rawViewingRange: null
+  };
+  
+  // Extract Businesses=[...]
+  const businessMatch = firstLine.match(/Businesses=\[([^\]]+)\]/);
+  if (businessMatch) {
+    const business = businessMatch[1].trim();
+    if (business.toLowerCase().includes('jivo mart') || business.toLowerCase().includes('jivo mart private')) {
+      result.entity = 'JMPL (Jivo Mart Pvt Ltd)';
+      result.business = 'JIVO MART PVT LTD';
+    } else if (business.toLowerCase().includes('jivo wellness') || business.toLowerCase().includes('wellness')) {
+      result.entity = 'JWPL (Jivo Wellness Pvt Ltd)';
+      result.business = 'JIVO WELLNESS PVT LTD';
+    }
+  }
+  
+  // Extract Viewing Range=[DD/MM/YY - DD/MM/YY]
+  const viewingMatch = firstLine.match(/Viewing Range=\[([^\]]+)\]/);
+  if (viewingMatch) {
+    result.rawViewingRange = viewingMatch[1].trim();
+    // Parse date: "30/12/25 - 30/12/25" -> take first date
+    const dateMatch = result.rawViewingRange.match(/(\d{1,2})\/(\d{1,2})\/(\d{2})/);
+    if (dateMatch) {
+      const day = dateMatch[1].padStart(2, '0');
+      const month = dateMatch[2].padStart(2, '0');
+      const year = '20' + dateMatch[3];  // Assume 20xx
+      result.date = `${year}-${month}-${day}`;
+    }
+  }
+  
+  return result;
+}
+
+// Parse button handlers
+document.getElementById('paste-parse-btn').addEventListener('click', function() {
+  const text = document.getElementById('paste-input').value.trim();
+  if (!text) { showMsg('paste', 'warning', '⚠️ Please paste some data first'); return; }
+  
+  // For Amazon, detect entity and date from first row
+  if (currentConfig.isAmazon) {
+    const lines = text.split('\n');
+    if (lines.length < 2) {
+      showMsg('paste', 'error', '❌ Amazon data must include metadata row and header row');
+      return;
+    }
+    
+    amazonDetected = parseAmazonMetadata(lines[0]);
+    
+    if (!amazonDetected.business) {
+      showMsg('paste', 'error', '❌ Could not detect entity (JMPL/JWPL) from data. Check first row contains Businesses=[...]');
+      return;
+    }
+    if (!amazonDetected.date) {
+      showMsg('paste', 'error', '❌ Could not detect date from data. Check first row contains Viewing Range=[...]');
+      return;
+    }
+    
+    // Show detected info
+    document.getElementById('detected-entity').textContent = amazonDetected.entity;
+    document.getElementById('detected-date').textContent = amazonDetected.date;
+    document.getElementById('detected-table').textContent = amazonDetected.table + ' (business: ' + amazonDetected.business + ')';
+    document.getElementById('amazon-detected').style.display = 'block';
+    
+    // Parse Amazon data (skip first metadata row, use second as header)
+    const hasHeader = document.getElementById('paste-header').checked;
+    pasteData = parseAmazonData(text, hasHeader, amazonDetected.date, amazonDetected.rawViewingRange);
+  } else {
+    // Non-Amazon platforms
+    const inventoryDate = validateDate();
+    if (!inventoryDate) {
+      showMsg('paste', 'error', '❌ Please select an inventory date first');
+      return;
+    }
+    const hasHeader = document.getElementById('paste-header').checked;
+    pasteData = parseData(text, hasHeader, inventoryDate);
+  }
+  
+  if (pasteData.length > 0) {
+    showPreview('paste', pasteData);
+    const dateDisplay = currentConfig.isAmazon ? amazonDetected.date : validateDate();
+    const tableDisplay = currentConfig.isAmazon ? amazonDetected.table : currentConfig.table;
+    showMsg('paste', 'success', '✅ Found ' + pasteData.length + ' rows for ' + tableDisplay + ' (Date: ' + dateDisplay + ')');
+  } else {
+    showMsg('paste', 'error', '❌ No valid data found. Check column format.');
+  }
+});
+
+document.getElementById('paste-clear-btn').addEventListener('click', function() {
+  document.getElementById('paste-input').value = '';
+  document.getElementById('paste-preview').style.display = 'none';
+  document.getElementById('paste-msg').innerHTML = '';
+  document.getElementById('amazon-detected').style.display = 'none';
+  pasteData = [];
+  amazonDetected = { entity: null, business: null, table: 'amazon_inventory', date: null, rawViewingRange: null };
+});
+
+document.getElementById('paste-insert-btn').addEventListener('click', function() {
+  insertData('paste', pasteData);
+});
+
+// File upload handlers
+document.getElementById('upload-box').addEventListener('click', function() {
+  document.getElementById('csv-input').click();
+});
+
+document.getElementById('csv-input').addEventListener('change', function(e) {
+  if (e.target.files.length > 0) readFile(e.target.files[0]);
+});
+
+const uploadBox = document.getElementById('upload-box');
+uploadBox.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = '#3ECF8E'; });
+uploadBox.addEventListener('dragleave', function() { this.style.borderColor = '#ccc'; });
+uploadBox.addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.style.borderColor = '#ccc';
+  if (e.dataTransfer.files.length > 0) readFile(e.dataTransfer.files[0]);
+});
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    
+    if (currentConfig.isAmazon) {
+      const lines = text.split('\n');
+      if (lines.length < 2) {
+        showMsg('csv', 'error', '❌ Amazon data must include metadata row and header row');
+        return;
+      }
+      
+      amazonDetected = parseAmazonMetadata(lines[0]);
+      
+      if (!amazonDetected.business) {
+        showMsg('csv', 'error', '❌ Could not detect entity (JMPL/JWPL) from data');
+        return;
+      }
+      if (!amazonDetected.date) {
+        showMsg('csv', 'error', '❌ Could not detect date from data');
+        return;
+      }
+      
+      document.getElementById('detected-entity').textContent = amazonDetected.entity;
+      document.getElementById('detected-date').textContent = amazonDetected.date;
+      document.getElementById('detected-table').textContent = amazonDetected.table + ' (business: ' + amazonDetected.business + ')';
+      document.getElementById('amazon-detected').style.display = 'block';
+      
+      const hasHeader = document.getElementById('csv-header').checked;
+      csvData = parseAmazonData(text, hasHeader, amazonDetected.date, amazonDetected.rawViewingRange);
+    } else {
+      const inventoryDate = validateDate();
+      if (!inventoryDate) {
+        showMsg('csv', 'error', '❌ Please select an inventory date first');
+        return;
+      }
+      const hasHeader = document.getElementById('csv-header').checked;
+      csvData = parseData(text, hasHeader, inventoryDate);
+    }
+    
+    if (csvData.length > 0) {
+      showPreview('csv', csvData);
+      const dateDisplay = currentConfig.isAmazon ? amazonDetected.date : validateDate();
+      showMsg('csv', 'success', '✅ Found ' + csvData.length + ' rows from ' + file.name + ' (Date: ' + dateDisplay + ')');
+    } else {
+      showMsg('csv', 'error', '❌ No valid data found in file');
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('csv-clear-btn').addEventListener('click', function() {
+  document.getElementById('csv-input').value = '';
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-msg').innerHTML = '';
+  document.getElementById('amazon-detected').style.display = 'none';
+  csvData = [];
+  amazonDetected = { entity: null, business: null, table: 'amazon_inventory', date: null, rawViewingRange: null };
+});
+
+document.getElementById('csv-insert-btn').addEventListener('click', function() {
+  insertData('csv', csvData);
+});
+
+// CSV line parser
+function parseCSVLine(line, delim) {
+  if (delim === '\t') {
+    return line.split('\t').map(v => v.trim().replace(/^["']|["']$/g, '').replace(/^\uFEFF/, ''));
+  }
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') { inQuotes = !inQuotes; }
+    else if (char === ',' && !inQuotes) { result.push(current.trim().replace(/^["']|["']$/g, '').replace(/^\uFEFF/, '')); current = ''; }
+    else { current += char; }
+  }
+  result.push(current.trim().replace(/^["']|["']$/g, '').replace(/^\uFEFF/, ''));
+  return result;
+}
+
+// Parse Amazon data (special handling for metadata row)
+function parseAmazonData(text, hasHeader, inventoryDate, rawViewingRange) {
+  const COLS = currentConfig.columns;
+  const mapping = currentConfig.columnMapping;
+  const textFields = currentConfig.textFields || [];
+  
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  let lines = text.split('\n').filter(line => line.trim().length > 0);
+  if (lines.length < 2) return [];
+  
+  // Skip first line (metadata), second line is header
+  const headerLine = lines[1];
+  let delim = '\t';
+  if (headerLine.indexOf('\t') === -1 && headerLine.indexOf(',') > -1) delim = ',';
+  
+  let headers = parseCSVLine(headerLine, delim);
+  let startIdx = 2;  // Data starts from line 3 (index 2)
+  
+  console.log('Amazon headers found:', headers.length, headers);
+  
+  // Build header index map
+  const headerMap = {};
+  for (let i = 0; i < COLS.length; i++) {
+    const col = COLS[i];
+    let foundIdx = -1;
+    
+    for (let j = 0; j < headers.length; j++) {
+      if (headers[j] === col) { foundIdx = j; break; }
+    }
+    
+    if (foundIdx === -1) {
+      for (let j = 0; j < headers.length; j++) {
+        if (headers[j].toLowerCase() === col.toLowerCase()) { foundIdx = j; break; }
+      }
+    }
+    
+    if (foundIdx === -1) {
+      const colClean = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (let j = 0; j < headers.length; j++) {
+        const hdrClean = headers[j].toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (hdrClean === colClean || hdrClean.includes(colClean) || colClean.includes(hdrClean)) { foundIdx = j; break; }
+      }
+    }
+    
+    if (foundIdx === -1) foundIdx = i;
+    headerMap[col] = foundIdx;
+  }
+  
+  console.log('Amazon header map:', headerMap);
+  
+  const result = [];
+  
+  for (let i = startIdx; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i], delim);
+    if (vals.length < 3) continue;
+    
+    const row = {
+      inventory_date: inventoryDate,
+      raw_viewing_range: rawViewingRange,
+      business: amazonDetected.business  // Add business entity to each row
+    };
+    
+    for (let j = 0; j < COLS.length; j++) {
+      const col = COLS[j];
+      const idx = headerMap[col];
+      let val = (idx < vals.length) ? vals[idx] : null;
+      
+      if (val === '' || val === undefined) val = null;
+      
+      // Text fields (keep as-is, including %)
+      if (textFields.includes(col)) {
+        // Keep as text
+      }
+      // Numeric fields
+      else if (val !== null && currentConfig.numericFields && currentConfig.numericFields.includes(col)) {
+        val = parseInt(String(val).replace(/[^\d-]/g, ''));
+        if (isNaN(val)) val = 0;
+      }
+      // Decimal fields (handle Indian number format with commas)
+      else if (val !== null && currentConfig.decimalFields && currentConfig.decimalFields.includes(col)) {
+        val = parseFloat(String(val).replace(/,/g, '').replace(/[^\d.-]/g, ''));
+        if (isNaN(val)) val = 0;
+      }
+      
+      const dbCol = mapping ? mapping[col] : col;
+      if (dbCol) row[dbCol] = val;
+    }
+    
+    // Check required fields
+    let hasRequired = true;
+    for (const req of currentConfig.requiredFields) {
+      const dbReq = mapping ? mapping[req] : req;
+      if (!row[dbReq]) { hasRequired = false; break; }
+    }
+    
+    if (hasRequired) result.push(row);
+  }
+  
+  return result;
+}
+
+// Main parse function (for non-Amazon platforms)
+function parseData(text, hasHeader, inventoryDate) {
+  const COLS = currentConfig.columns;
+  const mapping = currentConfig.columnMapping;
+  const ignoreFields = currentConfig.ignoreFields || [];
+  
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  let lines = text.split('\n').filter(line => line.trim().length > 0);
+  if (lines.length === 0) return [];
+  
+  const firstLine = lines[0];
+  let delim = '\t';
+  if (firstLine.indexOf('\t') === -1 && firstLine.indexOf(',') > -1) delim = ',';
+  
+  let headers = [];
+  let startIdx = 0;
+  
+  if (hasHeader) {
+    headers = parseCSVLine(lines[0], delim);
+    startIdx = 1;
+    console.log('Headers found:', headers.length, headers);
+  }
+  
+  // Build header index map
+  const headerMap = {};
+  for (let i = 0; i < COLS.length; i++) {
+    const col = COLS[i];
+    if (ignoreFields.includes(col)) continue;
+    
+    let foundIdx = -1;
+    
+    for (let j = 0; j < headers.length; j++) {
+      if (headers[j] === col) { foundIdx = j; break; }
+    }
+    
+    if (foundIdx === -1) {
+      for (let j = 0; j < headers.length; j++) {
+        if (headers[j].toLowerCase() === col.toLowerCase()) { foundIdx = j; break; }
+      }
+    }
+    
+    if (foundIdx === -1) {
+      const colClean = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (let j = 0; j < headers.length; j++) {
+        const hdrClean = headers[j].toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (hdrClean === colClean || hdrClean.includes(colClean) || colClean.includes(hdrClean)) { foundIdx = j; break; }
+      }
+    }
+    
+    if (foundIdx === -1) foundIdx = i;
+    headerMap[col] = foundIdx;
+  }
+  
+  console.log('Header map:', headerMap);
+  
+  const result = [];
+  
+  for (let i = startIdx; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i], delim);
+    if (vals.length < 3) continue;
+    
+    const row = {
+      inventory_date: inventoryDate
+    };
+    
+    for (let j = 0; j < COLS.length; j++) {
+      const col = COLS[j];
+      if (ignoreFields.includes(col)) continue;
+      
+      const idx = headerMap[col];
+      let val = (idx < vals.length) ? vals[idx] : null;
+      
+      if (val === '' || val === undefined) val = null;
+      
+      if (val !== null && currentConfig.numericFields && currentConfig.numericFields.includes(col)) {
+        val = parseInt(String(val).replace(/[^\d-]/g, ''));
+        if (isNaN(val)) val = 0;
+      }
+      
+      if (val !== null && currentConfig.decimalFields && currentConfig.decimalFields.includes(col)) {
+        val = parseFloat(String(val).replace(/,/g, '').replace(/[^\d.-]/g, ''));
+        if (isNaN(val)) val = 0;
+      }
+      
+      const dbCol = mapping ? mapping[col] : col;
+      if (dbCol) row[dbCol] = val;
+    }
+    
+    let hasRequired = true;
+    for (const req of currentConfig.requiredFields) {
+      const dbReq = mapping ? mapping[req] : req;
+      if (!row[dbReq]) { hasRequired = false; break; }
+    }
+    
+    if (hasRequired) result.push(row);
+  }
+  
+  return result;
+}
+
+// Deduplicate data based on unique key fields
+function deduplicateData(data, keyFields) {
+  if (!keyFields || keyFields.length === 0) return data;
+  
+  const seen = new Map();
+  
+  for (const row of data) {
+    const keyParts = keyFields.map(field => {
+      const val = row[field];
+      return val !== null && val !== undefined ? String(val) : '';
+    });
+    const key = keyParts.join('|||');
+    seen.set(key, row);
+  }
+  
+  return Array.from(seen.values());
+}
+
+function showPreview(type, data) {
+  const table = document.getElementById(type + '-table');
+  const preview = document.getElementById(type + '-preview');
+  const count = document.getElementById(type + '-count');
+  
+  const firstRow = data[0] || {};
+  const allCols = Object.keys(firstRow);
+  const showCols = allCols.slice(0, 10);
+  
+  let thead = '<tr>';
+  showCols.forEach(col => thead += '<th>' + col + '</th>');
+  if (allCols.length > 10) thead += '<th>...</th>';
+  thead += '</tr>';
+  table.querySelector('thead').innerHTML = thead;
+  
+  let tbody = '';
+  data.slice(0, 50).forEach(row => {
+    tbody += '<tr>';
+    showCols.forEach(col => {
+      let val = row[col] ?? '';
+      if (String(val).length > 25) val = String(val).substring(0, 25) + '...';
+      tbody += '<td>' + val + '</td>';
+    });
+    if (allCols.length > 10) tbody += '<td>...</td>';
+    tbody += '</tr>';
+  });
+  table.querySelector('tbody').innerHTML = tbody;
+  
+  count.textContent = data.length + ' rows';
+  preview.style.display = 'block';
+}
+
+function showMsg(type, msgType, text) {
+  document.getElementById(type + '-msg').innerHTML = '<div class="msg msg-' + msgType + '">' + text + '</div>';
+}
+
+async function insertData(type, data) {
+  if (data.length === 0) { showMsg(type, 'warning', '⚠️ No data to insert'); return; }
+
+  // Determine table and unique key
+  let tableName, uniqueKey, uniqueKeyFields;
+
+  if (currentConfig.isAmazon) {
+    if (!amazonDetected.business) {
+      showMsg(type, 'error', '❌ Amazon entity not detected. Please re-parse the data.');
+      return;
+    }
+    tableName = 'amazon_inventory';
+    uniqueKey = 'inventory_date,asin,business';
+    uniqueKeyFields = ['inventory_date', 'asin', 'business'];
+  } else {
+    tableName = currentConfig.table;
+    uniqueKey = currentConfig.uniqueKey;
+    uniqueKeyFields = currentConfig.uniqueKeyFields;
+  }
+
+  const useUpsert = document.getElementById(type + '-upsert').checked;
+  const progress = document.getElementById(type + '-progress');
+  const progressFill = document.getElementById(type + '-progress-fill');
+
+  document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+  progress.style.display = 'block';
+  showMsg(type, 'warning', '⏳ Inserting to ' + tableName + '...');
+
+  // Deduplicate data
+  const dedupedData = deduplicateData(data, uniqueKeyFields);
+  const duplicatesRemoved = data.length - dedupedData.length;
+
+  if (duplicatesRemoved > 0) {
+    console.log('Removed ' + duplicatesRemoved + ' duplicate rows');
+  }
+
+  // Send to backend API
+  let success = 0, failed = 0, lastError = '';
+
+  try {
+    const res = await fetch(API_BASE + '/api/upload/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table: tableName,
+        data: dedupedData,
+        unique_key: useUpsert ? uniqueKey : null,
+        upsert: useUpsert
+      })
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      failed = dedupedData.length;
+      lastError = result.detail || 'Upload failed';
+    } else {
+      success = result.success || 0;
+      failed = result.failed || 0;
+      lastError = result.error || '';
+    }
+  } catch (err) {
+    failed = dedupedData.length;
+    lastError = err.message;
+  }
+
+  progressFill.style.width = '100%';
+  progressFill.textContent = '100%';
+
+  setTimeout(() => { progress.style.display = 'none'; }, 500);
+  document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+
+  let msg = '';
+  if (failed === 0) {
+    msg = '✅ Inserted ' + success + ' rows to ' + tableName;
+    if (duplicatesRemoved > 0) msg += ' (' + duplicatesRemoved + ' duplicates merged)';
+    showMsg(type, 'success', msg);
+  } else if (success > 0) {
+    msg = '⚠️ Inserted ' + success + ', failed ' + failed + ': ' + lastError;
+    showMsg(type, 'warning', msg);
+  } else {
+    showMsg(type, 'error', '❌ Failed: ' + lastError);
+  }
+}
+
+console.log('Multi-platform inventory script loaded');
+console.log('Available platforms:', Object.keys(PLATFORMS));
+</script>
+</body>
+</html>
