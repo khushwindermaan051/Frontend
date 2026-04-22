@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/Users/khush/OneDrive/Desktop/Frontend status --porcelain)",
+      "Bash(git -C /c/Users/khush/OneDrive/Desktop/Frontend log --oneline -10)",
+      "Bash(git -C /c/Users/khush/OneDrive/Desktop/Frontend ls-files)",
+      "Bash(git -C /c/Users/khush/OneDrive/Desktop/Frontend diff --name-status HEAD)"
+    ]
+  }
+}

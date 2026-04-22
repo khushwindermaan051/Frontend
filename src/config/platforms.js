@@ -1,3 +1,11 @@
+import blinkitLogo from '../assets/logos/blinkit.png';
+import zeptoLogo from '../assets/logos/zepto.png';
+import jiomartLogo from '../assets/logos/jiomart.jpg';
+import amazonLogo from '../assets/logos/amazon.png';
+import bigbasketLogo from '../assets/logos/bigbasket.png';
+import swiggyLogo from '../assets/logos/swiggy.png';
+import flipkartLogo from '../assets/logos/flipkart.png';
+
 const SHARED = {
   masterPO: 'master_po',
   dispatches: 'truck_dispatches',
@@ -16,7 +24,7 @@ export const PLATFORMS = {
     name: 'Blinkit',
     color: '#f5c518',
     icon: 'B',
-    logo: 'https://logo.clearbit.com/blinkit.com',
+    logo: blinkitLogo,
     tables: {
       inventory: 'blinkit_inventory',
       secondarySells: 'blinkitSec',
@@ -35,7 +43,7 @@ export const PLATFORMS = {
     name: 'Zepto',
     color: '#7b2ff7',
     icon: 'Z',
-    logo: 'https://logo.clearbit.com/zeptonow.com',
+    logo: zeptoLogo,
     tables: {
       inventory: 'zepto_inventory',
       secondarySells: 'zeptSec',
@@ -54,7 +62,7 @@ export const PLATFORMS = {
     name: 'JioMart',
     color: '#0078ad',
     icon: 'J',
-    logo: 'https://logo.clearbit.com/jiomart.com',
+    logo: jiomartLogo,
     tables: {
       inventory: 'jiomart_inventory',
       secondarySells: 'jiomartSec',
@@ -73,7 +81,7 @@ export const PLATFORMS = {
     name: 'Amazon',
     color: '#ff9900',
     icon: 'A',
-    logo: 'https://logo.clearbit.com/amazon.in',
+    logo: amazonLogo,
     tables: {
       inventory: 'amazon_inventory',
       secondarySells: 'amazon_sec_daily',
@@ -92,7 +100,7 @@ export const PLATFORMS = {
     name: 'BigBasket',
     color: '#84c225',
     icon: 'BB',
-    logo: 'https://logo.clearbit.com/bigbasket.com',
+    logo: bigbasketLogo,
     tables: {
       inventory: 'bigbasket_inventory',
       secondarySells: 'bigbasketSec',
@@ -111,7 +119,7 @@ export const PLATFORMS = {
     name: 'Swiggy',
     color: '#fc8019',
     icon: 'S',
-    logo: 'https://logo.clearbit.com/swiggy.com',
+    logo: swiggyLogo,
     tables: {
       inventory: 'swiggy_inventory',
       secondarySells: 'swiggySec',
@@ -130,7 +138,7 @@ export const PLATFORMS = {
     name: 'Flipkart',
     color: '#2874f0',
     icon: 'F',
-    logo: 'https://logo.clearbit.com/flipkart.com',
+    logo: flipkartLogo,
     tables: {
       inventory: 'all_platform_inventory',
       secondarySells: 'flipkartSec',
