@@ -12,10 +12,6 @@ export default function PlatformTruckLoading() {
 
   return (
     <>
-      <div className="plat-page-header">
-        <h1>Truck Loading</h1>
-        <p>Load POs into trucks and dispatch for {config.name}</p>
-      </div>
       <div className="plat-content">
         <div className="plat-mode-switcher">
           <button

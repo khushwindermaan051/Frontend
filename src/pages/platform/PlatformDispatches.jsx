@@ -35,12 +35,6 @@ export default function PlatformDispatches() {
 
   return (
     <>
-      <div className="plat-page-header">
-        <h1>Dispatch History</h1>
-        <p>
-          {total} total dispatches for {config.name}
-        </p>
-      </div>
       <div className="plat-content">
         <div className="card">
           {total > 0 && (

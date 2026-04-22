@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { DispatchProvider } from './context/DispatchContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -12,11 +13,13 @@ import PlatformTruckLoading from './pages/platform/PlatformTruckLoading';
 import PlatformDispatches from './pages/platform/PlatformDispatches';
 import PlatformDistributors from './pages/platform/PlatformDistributors';
 import Distributors from './pages/Distributors';
+import UploadPage from './pages/UploadPage';
 import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
+      <ThemeProvider>
       <AuthProvider>
         <DispatchProvider>
           <Routes>
@@ -52,10 +55,27 @@ function App() {
               <Route path="dispatches" element={<PlatformDispatches />} />
               <Route path="distributors" element={<PlatformDistributors />} />
             </Route>
+            <Route
+              path="/upload/inventory"
+              element={
+                <ProtectedRoute>
+                  <UploadPage title="Inventory Upload" src="/uploader/inventory.html" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload/secondary"
+              element={
+                <ProtectedRoute>
+                  <UploadPage title="Secondary Upload" src="/uploader/secondary.html" />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </DispatchProvider>
       </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

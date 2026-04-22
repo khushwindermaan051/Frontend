@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
@@ -8,8 +8,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Already logged in — send to dashboard without adding login to history
+  if (!authLoading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +32,8 @@ export default function Login() {
     if (error) {
       setError(error.message);
     } else {
-      navigate('/dashboard');
+      // replace: true removes /login from history so back button can't return to it
+      navigate('/dashboard', { replace: true });
     }
   };
 

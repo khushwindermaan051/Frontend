@@ -1,28 +1,43 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in ms
 const AuthContext = createContext({});
 
 export const useAuth = () => useContext(AuthContext);
+
+function clearSession() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('loginTime');
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, check for a saved token and validate it
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const loginTime = localStorage.getItem('loginTime');
+
     if (!token) {
       setLoading(false);
       return;
     }
+
+    // Expire session after 24 hours
+    if (!loginTime || Date.now() - Number(loginTime) > SESSION_DURATION) {
+      clearSession();
+      setLoading(false);
+      return;
+    }
+
     fetch(`${API_BASE}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => setUser(data.user))
       .catch(() => {
-        localStorage.removeItem('token');
+        clearSession();
         setUser(null);
       })
       .finally(() => setLoading(false));
@@ -42,6 +57,7 @@ export function AuthProvider({ children }) {
           error: { message: data.detail || 'Registration failed' },
         };
       localStorage.setItem('token', data.token);
+      localStorage.setItem('loginTime', String(Date.now()));
       setUser(data.user);
       return { data, error: null };
     } catch (e) {
@@ -63,6 +79,7 @@ export function AuthProvider({ children }) {
           error: { message: data.detail || 'Login failed' },
         };
       localStorage.setItem('token', data.token);
+      localStorage.setItem('loginTime', String(Date.now()));
       setUser(data.user);
       return { data, error: null };
     } catch (e) {
@@ -71,7 +88,7 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
-    localStorage.removeItem('token');
+    clearSession();
     setUser(null);
     return { error: null };
   };

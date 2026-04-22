@@ -1,8 +1,39 @@
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { useEffect, useState, useCallback } from 'react';
+import { useTheme } from '../context/ThemeContext';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { getAllPlatforms } from '../config/platforms';
 import { dashboardAPI } from '../lib/api';
+import {
+  LayoutDashboard, Users, Upload, FileUp, Settings, Bell,
+  Sun, Moon, Monitor, User, Shield, ChevronRight, ChevronDown,
+  LogOut, ArrowRight, BarChart3,
+} from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+// ─── Session cache helpers (5-min TTL) ───
+const CACHE_TTL = 5 * 60 * 1000;
+const COUNTS_KEY = 'dash_counts';
+const ALERTS_KEY = 'dash_alerts';
+const CHARTS_KEY = 'dash_charts';
+
+function readCache(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const { data, time } = JSON.parse(raw);
+    return Date.now() - time < CACHE_TTL ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key, data) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ data, time: Date.now() }));
+  } catch {}
+}
 
 const SECTIONS = {
   primary: {
@@ -208,9 +239,18 @@ function InventoryCharts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const cached = readCache(CHARTS_KEY);
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+      return;
+    }
     dashboardAPI
       .getInventoryCharts()
-      .then(setData)
+      .then((d) => {
+        setData(d);
+        writeCache(CHARTS_KEY, d);
+      })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, []);
@@ -828,9 +868,11 @@ function PaginatedTable({ tableName }) {
 // ─── Main Dashboard ───
 export default function Dashboard() {
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [view, setView] = useState('home'); // 'home' or 'table'
+  const [view, setView] = useState('home'); // 'home' | 'table' | 'settings'
   const [activeSection, setActiveSection] = useState('primary');
   const [activeTable, setActiveTable] = useState('');
   const [collapsed, setCollapsed] = useState(false);
@@ -840,35 +882,161 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
 
+  // Notifications
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifUnread, setNotifUnread] = useState(0);
+  const notifRef = useRef(null);
+
+  // Settings view state
+  const [settingsTab, setSettingsTab] = useState('profile');
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [permissions, setPermissions] = useState([]);
+  const [loadingPerms, setLoadingPerms] = useState(false);
+  const [expandedPerms, setExpandedPerms] = useState({});
+
+  // Change password modal
+  const [changePwdOpen, setChangePwdOpen] = useState(false);
+  const [changePwdForm, setChangePwdForm] = useState({ current: '', next: '', confirm: '' });
+  const [changePwdError, setChangePwdError] = useState('');
+  const [changePwdSuccess, setChangePwdSuccess] = useState('');
+  const [changePwdLoading, setChangePwdLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState({ current: false, next: false, confirm: false });
+
   const isOpen = !collapsed || hoverOpen;
 
-  // Fetch all table counts on mount
+  // Open settings view if navigated here from platform with openSettings flag
   useEffect(() => {
-    setLoadingCounts(true);
-    Promise.all(
-      ALL_TABLES.map((table) =>
-        fetchCount(table).then((count) => ({ table, count })),
-      ),
-    ).then((results) => {
-      const counts = {};
-      results.forEach(({ table, count }) => {
-        counts[table] = count;
-      });
-      setTableCounts(counts);
-      setLoadingCounts(false);
-    });
+    if (location.state?.openSettings) {
+      setView('settings');
+      setSettingsTab('profile');
+      // Clear state so refresh doesn't re-open settings
+      navigate(location.pathname, { replace: true, state: {} });
+    }
   }, []);
 
-  // Fetch expiry/delivery alerts on mount
+  // Fetch all table counts on mount — use batch endpoint, cache result
   useEffect(() => {
-    setLoadingAlerts(true);
+    const cached = readCache(COUNTS_KEY);
+    if (cached) {
+      setTableCounts(cached);
+      setLoadingCounts(false);
+    }
+    // Fetch fresh in background (or blocking if no cache)
+    dashboardAPI
+      .getTableCounts()
+      .then((res) => {
+        // Backend returns { table: count, ... } or { counts: { ... } }
+        const counts = (res && typeof res.counts === 'object') ? res.counts : res;
+        if (counts && typeof counts === 'object') {
+          setTableCounts(counts);
+          writeCache(COUNTS_KEY, counts);
+        }
+      })
+      .catch(() => {
+        // Fallback to individual calls only if batch fails and no cache
+        if (!cached) {
+          Promise.all(
+            ALL_TABLES.map((t) => fetchCount(t).then((c) => ({ table: t, count: c }))),
+          ).then((results) => {
+            const counts = Object.fromEntries(results.map(({ table, count }) => [table, count]));
+            setTableCounts(counts);
+            writeCache(COUNTS_KEY, counts);
+          });
+        }
+      })
+      .finally(() => setLoadingCounts(false));
+  }, []);
+
+  // Fetch expiry/delivery alerts on mount — cache result
+  useEffect(() => {
+    const cached = readCache(ALERTS_KEY);
+    if (cached) {
+      setAlerts(cached);
+      setLoadingAlerts(false);
+    }
     Promise.all(ALL_TABLES.map((table) => fetchExpiryAlerts(table)))
       .then((results) => {
-        setAlerts(results.flat());
-        setLoadingAlerts(false);
+        const flat = results.flat();
+        setAlerts(flat);
+        writeCache(ALERTS_KEY, flat);
       })
-      .catch(() => setLoadingAlerts(false));
+      .catch(() => {})
+      .finally(() => setLoadingAlerts(false));
   }, []);
+
+  // Fetch notifications
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const fetchNotifs = () => {
+      fetch(`${API_BASE}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.ok ? r.json() : Promise.reject())
+        .then((data) => {
+          const list = data.notifications || data || [];
+          setNotifications(list);
+          setNotifUnread(data.unread_count ?? list.filter((n) => !n.read).length);
+        })
+        .catch(() => {});
+    };
+    fetchNotifs();
+    const id = setInterval(fetchNotifs, 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Close notif dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Fetch profile when entering settings
+  useEffect(() => {
+    if (view !== 'settings') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setLoadingProfile(true);
+    fetch(`${API_BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((data) => setProfile(data.user))
+      .catch(() => {})
+      .finally(() => setLoadingProfile(false));
+  }, [view]);
+
+  // Fetch permissions when switching to permissions tab in settings
+  useEffect(() => {
+    if (view !== 'settings' || settingsTab !== 'permissions') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setLoadingPerms(true);
+    fetch(`${API_BASE}/api/auth/permissions`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((data) => setPermissions(data.permissions || data || []))
+      .catch(() => setPermissions([]))
+      .finally(() => setLoadingPerms(false));
+  }, [view, settingsTab]);
+
+  const handleMarkAllRead = () => {
+    const token = localStorage.getItem('token');
+    fetch(`${API_BASE}/api/notifications/mark-all-read`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifUnread(0);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -887,6 +1055,57 @@ export default function Dashboard() {
     setView('home');
     setActiveTable('');
     setCollapsed(false);
+  };
+
+  const goSettings = () => {
+    setView('settings');
+    setSettingsTab('profile');
+    setCollapsed(false);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setChangePwdError('');
+    setChangePwdSuccess('');
+    if (!changePwdForm.current) { setChangePwdError('Current password is required.'); return; }
+    if (changePwdForm.next.length < 6) { setChangePwdError('New password must be at least 6 characters.'); return; }
+    if (changePwdForm.next !== changePwdForm.confirm) { setChangePwdError('New passwords do not match.'); return; }
+    setChangePwdLoading(true);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ current_password: changePwdForm.current, new_password: changePwdForm.next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setChangePwdError(data.detail || 'Failed to change password.'); return; }
+      setChangePwdSuccess('Password changed successfully.');
+      setChangePwdForm({ current: '', next: '', confirm: '' });
+      setTimeout(() => { setChangePwdOpen(false); setChangePwdSuccess(''); }, 1800);
+    } catch {
+      setChangePwdError('Network error. Please try again.');
+    } finally {
+      setChangePwdLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      });
+    } catch { return dateStr; }
+  };
+
+  const timeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return 'Just now';
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
   };
 
   const handleSidebarEnter = () => {
@@ -925,7 +1144,7 @@ export default function Dashboard() {
             onClick={goHome}
             title={!isOpen ? 'Dashboard' : ''}
           >
-            <span className="nav-icon">D</span>
+            <span className="nav-icon"><LayoutDashboard size={15} /></span>
             {isOpen && <span className="nav-label">Dashboard</span>}
           </button>
 
@@ -938,12 +1157,7 @@ export default function Dashboard() {
             className="nav-platform-link"
             title={!isOpen ? 'Distributors' : ''}
           >
-            <span
-              className="nav-icon nav-platform-fallback"
-              style={{ background: '#6c5ce7', color: '#fff', display: 'flex' }}
-            >
-              D
-            </span>
+            <span className="nav-icon"><Users size={15} /></span>
             {isOpen && <span className="nav-label">Distributors</span>}
           </Link>
 
@@ -981,57 +1195,33 @@ export default function Dashboard() {
 
           {/* Data Upload Tools */}
           {isOpen && <div className="nav-section-title">Data Upload</div>}
-          <a
-            href="/uploader/inventory.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/upload/inventory"
             className="nav-platform-link"
             title={!isOpen ? 'Inventory Upload' : ''}
           >
-            <span
-              className="nav-icon nav-platform-fallback"
-              style={{ background: '#3ECF8E', color: '#fff', display: 'flex' }}
-            >
-              I
-            </span>
+            <span className="nav-icon"><Upload size={15} /></span>
             {isOpen && <span className="nav-label">Inventory Upload</span>}
-          </a>
-          <a
-            href="/uploader/secondary.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          </Link>
+          <Link
+            to="/upload/secondary"
             className="nav-platform-link"
             title={!isOpen ? 'Secondary Upload' : ''}
           >
-            <span
-              className="nav-icon nav-platform-fallback"
-              style={{ background: '#764ba2', color: '#fff', display: 'flex' }}
-            >
-              S
-            </span>
+            <span className="nav-icon"><FileUp size={15} /></span>
             {isOpen && <span className="nav-label">Secondary Upload</span>}
-          </a>
+          </Link>
         </nav>
 
-        <div className="sidebar-user">
-          <div className="user-avatar">
-            {user?.email?.[0]?.toUpperCase() || 'U'}
-          </div>
-          {isOpen && (
-            <>
-              <div className="user-info">
-                <span className="user-email">{user?.email}</span>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="logout-btn"
-                title="Logout"
-              >
-                &#x2192;
-              </button>
-            </>
-          )}
-        </div>
+        {/* Settings gear button */}
+        <button
+          className={`sidebar-settings-btn ${view === 'settings' ? 'active' : ''}`}
+          onClick={goSettings}
+          title={!isOpen ? 'Settings' : ''}
+        >
+          <span className="sidebar-settings-icon"><Settings size={15} /></span>
+          {isOpen && <span className="nav-label">Settings</span>}
+        </button>
 
         <button
           className="collapse-btn"
@@ -1050,6 +1240,11 @@ export default function Dashboard() {
           <div className="topbar-title">
             {view === 'home' ? (
               <h1>Dashboard</h1>
+            ) : view === 'settings' ? (
+              <>
+                <button className="back-btn" onClick={goHome} title="Back to Dashboard">&larr;</button>
+                <h1>Settings</h1>
+              </>
             ) : (
               <>
                 <button
@@ -1066,6 +1261,83 @@ export default function Dashboard() {
               </>
             )}
           </div>
+
+          <div className="topbar-actions">
+            {/* Theme toggle */}
+            <div className="theme-toggle">
+              <button
+                className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
+                onClick={() => setTheme('light')}
+                title="Light theme"
+              >
+                <Sun size={14} />
+              </button>
+              <button
+                className={`theme-btn ${theme === 'default' ? 'active' : ''}`}
+                onClick={() => setTheme('default')}
+                title="System default"
+              >
+                <Monitor size={14} />
+              </button>
+              <button
+                className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
+                onClick={() => setTheme('dark')}
+                title="Dark theme"
+              >
+                <Moon size={14} />
+              </button>
+            </div>
+
+            {/* Notification bell */}
+            <div className="notif-wrapper" ref={notifRef}>
+              <button
+                className={`notif-bell-btn ${notifOpen ? 'active' : ''}`}
+                onClick={() => setNotifOpen((o) => !o)}
+                title="Notifications"
+              >
+                <Bell size={17} />
+                {notifUnread > 0 && (
+                  <span className="notif-badge">
+                    {notifUnread > 99 ? '99+' : notifUnread}
+                  </span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div className="notif-panel">
+                  <div className="notif-panel-header">
+                    <span className="notif-panel-title">Notifications</span>
+                    {notifUnread > 0 && (
+                      <button className="notif-mark-read" onClick={handleMarkAllRead}>
+                        ✓ Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="notif-list">
+                    {notifications.length === 0 ? (
+                      <div className="notif-empty">No notifications</div>
+                    ) : (
+                      notifications.slice(0, 8).map((n, i) => (
+                        <div key={i} className={`notif-item ${!n.read ? 'unread' : ''}`}>
+                          <div className="notif-item-title">{n.title || n.message}</div>
+                          {n.body && <div className="notif-item-body">{n.body}</div>}
+                          <div className="notif-item-time">{timeAgo(n.created_at || n.timestamp)}</div>
+                          {!n.read && <span className="notif-dot" />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="notif-panel-footer">
+                    <button className="notif-view-all" onClick={() => setNotifOpen(false)}>
+                      View all notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </header>
 
         <main className="content">
@@ -1077,6 +1349,227 @@ export default function Dashboard() {
               alerts={alerts}
               loadingAlerts={loadingAlerts}
             />
+          ) : view === 'settings' ? (
+            <div className="settings-page">
+              {/* Breadcrumb */}
+              <div className="settings-breadcrumb">
+                <button className="settings-breadcrumb-link" onClick={goHome}>Home</button>
+                <span className="settings-breadcrumb-sep">›</span>
+                <span className="settings-breadcrumb-cur">Settings</span>
+              </div>
+
+              <div className="settings-header">
+                <h1 className="settings-title">Settings</h1>
+                <p className="settings-sub">Manage your profile and view permissions</p>
+              </div>
+
+              {/* Tabs */}
+              <div className="settings-tabs">
+                <button
+                  className={`settings-tab ${settingsTab === 'profile' ? 'active' : ''}`}
+                  onClick={() => setSettingsTab('profile')}
+                >
+                  <User size={14} /> Profile
+                </button>
+                <button
+                  className={`settings-tab ${settingsTab === 'permissions' ? 'active' : ''}`}
+                  onClick={() => setSettingsTab('permissions')}
+                >
+                  <Shield size={14} /> Permissions
+                </button>
+              </div>
+
+              {/* Profile Tab */}
+              {settingsTab === 'profile' && (
+                <div className="settings-card">
+                  {loadingProfile ? (
+                    <div className="settings-loading">Loading...</div>
+                  ) : (() => {
+                    const u = profile || user;
+                    return (
+                      <>
+                        <div className="settings-profile-row">
+                          <div className="settings-avatar-lg">
+                            {(u?.employee_name || u?.email || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                          </div>
+
+                          <div className="settings-profile-fields">
+                            {u?.employee_code && (
+                              <div className="settings-field">
+                                <span className="settings-field-label">employee_code</span>
+                                <span className="settings-field-value">{u.employee_code}</span>
+                              </div>
+                            )}
+                            <div className="settings-field">
+                              <span className="settings-field-label">employee name</span>
+                              <span className="settings-field-value">
+                                {u?.employee_name || u?.name || u?.email?.split('@')[0] || '—'}
+                              </span>
+                            </div>
+                            <div className="settings-field">
+                              <span className="settings-field-label">email</span>
+                              <span className="settings-field-value">{u?.email || '—'}</span>
+                            </div>
+                            <div className="settings-field-row">
+                              <span className={`settings-status-badge ${(u?.status || 'active').toLowerCase()}`}>
+                                {u?.status || 'Active'}
+                              </span>
+                            </div>
+                            <div className="settings-field">
+                              <span className="settings-field-label">Joined On:</span>
+                              <span className="settings-field-value settings-field-bold">
+                                {formatDate(u?.joined_on || u?.created_at)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="settings-profile-actions">
+                            <button className="settings-change-pwd-btn" onClick={() => { setChangePwdOpen(true); setChangePwdError(''); setChangePwdSuccess(''); }}>Change Password</button>
+                            <button className="settings-logout-btn" onClick={handleSignOut}>Logout</button>
+                          </div>
+                        </div>
+
+                        {u?.roles?.length > 0 && (
+                          <div className="settings-roles">
+                            <h3 className="settings-roles-title">Roles</h3>
+                            <div className="settings-roles-grid">
+                              {u.roles.map((role, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`settings-role-card ${role.is_current ? 'current' : ''}`}
+                                >
+                                  {role.is_current && (
+                                    <span className="settings-role-badge">Current</span>
+                                  )}
+                                  <div className="settings-role-name">{role.role || role.name}</div>
+                                  <div className="settings-role-company">{role.company}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Permissions Tab */}
+              {settingsTab === 'permissions' && (
+                <div className="settings-card settings-perms-card">
+                  {loadingPerms ? (
+                    <div className="settings-loading">Loading permissions...</div>
+                  ) : permissions.length === 0 ? (
+                    <div className="settings-empty">No permissions data available.</div>
+                  ) : (
+                    permissions.map((perm, idx) => {
+                      const key = perm.module || idx;
+                      return (
+                        <div key={key} className="settings-perm-row">
+                          <button
+                            className="settings-perm-header"
+                            onClick={() => setExpandedPerms((p) => ({ ...p, [key]: !p[key] }))}
+                          >
+                            <div className="settings-perm-left">
+                              <span className="settings-perm-icon"><Shield size={15} /></span>
+                              <span className="settings-perm-name">{perm.module}</span>
+                            </div>
+                            <div className="settings-perm-right">
+                              <span className="settings-perm-count">
+                                {perm.count ?? perm.permissions?.length ?? 0}
+                              </span>
+                              <span className={`settings-perm-chevron ${expandedPerms[key] ? 'open' : ''}`}>›</span>
+                            </div>
+                          </button>
+                          {expandedPerms[key] && perm.permissions?.length > 0 && (
+                            <div className="settings-perm-items">
+                              {perm.permissions.map((p, i) => (
+                                <div key={i} className="settings-perm-item">{p}</div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* Change Password Modal */}
+              {changePwdOpen && (
+                <div className="cpwd-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setChangePwdOpen(false); setChangePwdError(''); } }}>
+                  <div className="cpwd-modal">
+                    <div className="cpwd-header">
+                      <h2 className="cpwd-title">Change Password</h2>
+                      <button className="cpwd-close" onClick={() => { setChangePwdOpen(false); setChangePwdError(''); }}>✕</button>
+                    </div>
+
+                    <form onSubmit={handleChangePassword} className="cpwd-form">
+                      {changePwdError && <div className="cpwd-error">{changePwdError}</div>}
+                      {changePwdSuccess && <div className="cpwd-success">{changePwdSuccess}</div>}
+
+                      <div className="cpwd-field">
+                        <label className="cpwd-label">Current Password</label>
+                        <div className="cpwd-input-wrap">
+                          <input
+                            type={showPwd.current ? 'text' : 'password'}
+                            className="cpwd-input"
+                            placeholder="Enter current password"
+                            value={changePwdForm.current}
+                            onChange={(e) => setChangePwdForm((f) => ({ ...f, current: e.target.value }))}
+                            autoComplete="current-password"
+                          />
+                          <button type="button" className="cpwd-eye" onClick={() => setShowPwd((s) => ({ ...s, current: !s.current }))}>
+                            {showPwd.current ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="cpwd-field">
+                        <label className="cpwd-label">New Password</label>
+                        <div className="cpwd-input-wrap">
+                          <input
+                            type={showPwd.next ? 'text' : 'password'}
+                            className="cpwd-input"
+                            placeholder="Min. 6 characters"
+                            value={changePwdForm.next}
+                            onChange={(e) => setChangePwdForm((f) => ({ ...f, next: e.target.value }))}
+                            autoComplete="new-password"
+                          />
+                          <button type="button" className="cpwd-eye" onClick={() => setShowPwd((s) => ({ ...s, next: !s.next }))}>
+                            {showPwd.next ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="cpwd-field">
+                        <label className="cpwd-label">Confirm New Password</label>
+                        <div className="cpwd-input-wrap">
+                          <input
+                            type={showPwd.confirm ? 'text' : 'password'}
+                            className="cpwd-input"
+                            placeholder="Repeat new password"
+                            value={changePwdForm.confirm}
+                            onChange={(e) => setChangePwdForm((f) => ({ ...f, confirm: e.target.value }))}
+                            autoComplete="new-password"
+                          />
+                          <button type="button" className="cpwd-eye" onClick={() => setShowPwd((s) => ({ ...s, confirm: !s.confirm }))}>
+                            {showPwd.confirm ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="cpwd-actions">
+                        <button type="button" className="cpwd-cancel" onClick={() => { setChangePwdOpen(false); setChangePwdError(''); }}>Cancel</button>
+                        <button type="submit" className="cpwd-submit" disabled={changePwdLoading}>
+                          {changePwdLoading ? 'Saving…' : 'Update Password'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="card">
               <PaginatedTable

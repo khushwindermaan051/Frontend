@@ -101,10 +101,6 @@ export default function PlatformPO() {
 
   return (
     <>
-      <div className="plat-page-header">
-        <h1>PO &amp; Stock Management</h1>
-        <p>Select a PO and compare with {config.name} inventory by sku code</p>
-      </div>
       <div className="plat-content">
         <div className="plat-po-layout">
           {/* Left: PO List */}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlatform } from '../../context/PlatformContext';
 import { platformAPI } from '../../lib/api';
+import { ClipboardList, Truck, History } from 'lucide-react';
 
 export default function PlatformDashboard() {
   const config = usePlatform();
@@ -24,10 +25,6 @@ export default function PlatformDashboard() {
 
   return (
     <>
-      <div className="plat-page-header">
-        <h1>{config.name} Dashboard</h1>
-        <p>Overview of {config.name} platform operations</p>
-      </div>
       <div className="plat-content">
         <div className="plat-cards">
           <Link to={`/platform/${config.slug}/po`} className="plat-card">
@@ -61,21 +58,21 @@ export default function PlatformDashboard() {
 
         <div className="plat-quick-links">
           <Link to={`/platform/${config.slug}/po`} className="plat-quick-link">
-            <span className="plat-quick-link-icon">&#128230;</span>
+            <span className="plat-quick-link-icon"><ClipboardList size={18} /></span>
             PO &amp; Stock Management
           </Link>
           <Link
             to={`/platform/${config.slug}/truck-loading`}
             className="plat-quick-link"
           >
-            <span className="plat-quick-link-icon">&#128666;</span>
+            <span className="plat-quick-link-icon"><Truck size={18} /></span>
             Truck Loading
           </Link>
           <Link
             to={`/platform/${config.slug}/dispatches`}
             className="plat-quick-link"
           >
-            <span className="plat-quick-link-icon">&#128203;</span>
+            <span className="plat-quick-link-icon"><History size={18} /></span>
             Dispatch History
           </Link>
         </div>

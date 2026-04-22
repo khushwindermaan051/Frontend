@@ -1,13 +1,70 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { sapAPI } from '../lib/api';
+import { Bell, Settings, Sun, Moon, Monitor, ChevronRight } from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const PAGE_SIZE = 50;
 
 export default function Distributors() {
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifUnread, setNotifUnread] = useState(0);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const fetchNotifs = () => {
+      fetch(`${API_BASE}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((data) => {
+          const list = data.notifications || data || [];
+          setNotifications(list);
+          setNotifUnread(data.unread_count ?? list.filter((n) => !n.read).length);
+        })
+        .catch(() => {});
+    };
+    fetchNotifs();
+    const id = setInterval(fetchNotifs, 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleMarkAllRead = () => {
+    const token = localStorage.getItem('token');
+    fetch(`${API_BASE}/api/notifications/mark-all-read`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifUnread(0);
+  };
+
+  const timeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return 'Just now';
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
 
   const [distributors, setDistributors] = useState([]);
   const [total, setTotal] = useState(0);
@@ -123,33 +180,101 @@ export default function Distributors() {
         <nav className="sidebar-nav">
           <button className="plat-nav-item active">Distributors</button>
           <div className="nav-divider" />
-          <button
-            className="plat-nav-item plat-back-btn"
-            onClick={() => navigate('/dashboard')}
-          >
-            &larr; Main Dashboard
-          </button>
         </nav>
 
-        <div className="sidebar-user">
-          <div className="user-avatar" style={{ background: '#6c5ce7' }}>
-            {user?.email?.[0]?.toUpperCase() || 'U'}
-          </div>
-          <div className="user-info">
-            <span className="user-email">{user?.email}</span>
-          </div>
-          <button onClick={handleSignOut} className="logout-btn" title="Logout">
-            &#x2192;
-          </button>
-        </div>
+        <button
+          className="sidebar-settings-btn"
+          onClick={() => navigate('/dashboard', { state: { openSettings: true } })}
+          title="Settings"
+        >
+          <span className="sidebar-settings-icon"><Settings size={15} /></span>
+          <span className="nav-label">Settings</span>
+        </button>
+
       </aside>
 
       {/* Main area */}
       <div className="main-area">
-        <div className="plat-page-header">
-          <h1>Distributors</h1>
-          <p>{total.toLocaleString()} suppliers from SAP Business One</p>
-        </div>
+        <header className="topbar">
+          <div className="topbar-title">
+            <button
+              className="plat-topbar-dashboard-btn"
+              onClick={() => navigate('/dashboard')}
+              title="Go to Main Dashboard"
+            >
+              Dashboard
+            </button>
+            <span className="plat-topbar-sep"><ChevronRight size={14} /></span>
+            <span className="topbar-section">Distributors</span>
+          </div>
+
+          <div className="topbar-actions">
+            <div className="theme-toggle">
+              <button
+                className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
+                onClick={() => setTheme('light')}
+                title="Light theme"
+              ><Sun size={14} /></button>
+              <button
+                className={`theme-btn ${theme === 'default' ? 'active' : ''}`}
+                onClick={() => setTheme('default')}
+                title="System default"
+              ><Monitor size={14} /></button>
+              <button
+                className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
+                onClick={() => setTheme('dark')}
+                title="Dark theme"
+              ><Moon size={14} /></button>
+            </div>
+
+            <div className="notif-wrapper" ref={notifRef}>
+              <button
+                className={`notif-bell-btn ${notifOpen ? 'active' : ''}`}
+                onClick={() => setNotifOpen((o) => !o)}
+                title="Notifications"
+              >
+                <Bell size={17} />
+                {notifUnread > 0 && (
+                  <span className="notif-badge">
+                    {notifUnread > 99 ? '99+' : notifUnread}
+                  </span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div className="notif-panel">
+                  <div className="notif-panel-header">
+                    <span className="notif-panel-title">Notifications</span>
+                    {notifUnread > 0 && (
+                      <button className="notif-mark-read" onClick={handleMarkAllRead}>
+                        ✓ Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="notif-list">
+                    {notifications.length === 0 ? (
+                      <div className="notif-empty">No notifications</div>
+                    ) : (
+                      notifications.slice(0, 8).map((n, i) => (
+                        <div key={i} className={`notif-item ${!n.read ? 'unread' : ''}`}>
+                          <div className="notif-item-title">{n.title || n.message}</div>
+                          {n.body && <div className="notif-item-body">{n.body}</div>}
+                          <div className="notif-item-time">{timeAgo(n.created_at || n.timestamp)}</div>
+                          {!n.read && <span className="notif-dot" />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="notif-panel-footer">
+                    <button className="notif-view-all" onClick={() => setNotifOpen(false)}>
+                      View all notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
 
         <div className="plat-content">
           <div className="dist-layout">

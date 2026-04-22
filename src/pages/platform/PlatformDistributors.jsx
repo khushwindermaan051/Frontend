@@ -109,13 +109,6 @@ export default function PlatformDistributors() {
 
   return (
     <>
-      <div className="plat-page-header">
-        <h1>Distributors</h1>
-        <p>
-          {total.toLocaleString()} distributors linked to {config.name} from SAP
-          B1
-        </p>
-      </div>
       <div className="plat-content">
         <div className="dist-layout">
           {/* Left: List */}
