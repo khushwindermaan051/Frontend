@@ -11,7 +11,6 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const PAGE_LABELS = {
   '': 'Dashboard',
   po: 'PO & Stock',
-  'truck-loading': 'Truck Loading',
   dispatches: 'Dispatches',
   distributors: 'Distributors',
 };
@@ -95,7 +94,6 @@ export default function PlatformLayout() {
   const navItems = [
     { to: `/platform/${slug}`, label: 'Dashboard', end: true },
     { to: `/platform/${slug}/po`, label: 'PO & Stock' },
-    { to: `/platform/${slug}/truck-loading`, label: 'Truck Loading' },
     { to: `/platform/${slug}/dispatches`, label: 'Dispatches' },
     { to: `/platform/${slug}/distributors`, label: 'Distributors' },
   ];

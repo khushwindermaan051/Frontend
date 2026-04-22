@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlatform } from '../../context/PlatformContext';
 import { platformAPI } from '../../lib/api';
-import { ClipboardList, Truck, History } from 'lucide-react';
+import { ClipboardList, History } from 'lucide-react';
 
 export default function PlatformDashboard() {
   const config = usePlatform();
@@ -10,7 +10,6 @@ export default function PlatformDashboard() {
     inventory: 0,
     sells: 0,
     openPOs: 0,
-    activeTrucks: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -45,28 +44,12 @@ export default function PlatformDashboard() {
             </span>
             <span className="plat-card-label">Secondary Sells</span>
           </div>
-          <Link
-            to={`/platform/${config.slug}/truck-loading`}
-            className="plat-card"
-          >
-            <span className="plat-card-value">
-              {loading ? '...' : stats.activeTrucks}
-            </span>
-            <span className="plat-card-label">Active Truck Loadings</span>
-          </Link>
         </div>
 
         <div className="plat-quick-links">
           <Link to={`/platform/${config.slug}/po`} className="plat-quick-link">
             <span className="plat-quick-link-icon"><ClipboardList size={18} /></span>
             PO &amp; Stock Management
-          </Link>
-          <Link
-            to={`/platform/${config.slug}/truck-loading`}
-            className="plat-quick-link"
-          >
-            <span className="plat-quick-link-icon"><Truck size={18} /></span>
-            Truck Loading
           </Link>
           <Link
             to={`/platform/${config.slug}/dispatches`}

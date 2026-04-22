@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard';
 import PlatformLayout from './layouts/PlatformLayout';
 import PlatformDashboard from './pages/platform/PlatformDashboard';
 import PlatformPO from './pages/platform/PlatformPO';
-import PlatformTruckLoading from './pages/platform/PlatformTruckLoading';
 import PlatformDispatches from './pages/platform/PlatformDispatches';
 import PlatformDistributors from './pages/platform/PlatformDistributors';
 import Distributors from './pages/Distributors';
@@ -51,7 +50,6 @@ function App() {
             >
               <Route index element={<PlatformDashboard />} />
               <Route path="po" element={<PlatformPO />} />
-              <Route path="truck-loading" element={<PlatformTruckLoading />} />
               <Route path="dispatches" element={<PlatformDispatches />} />
               <Route path="distributors" element={<PlatformDistributors />} />
             </Route>
