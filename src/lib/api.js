@@ -7,7 +7,10 @@ async function fetchAPI(path, params = {}) {
       url.searchParams.set(key, val);
     }
   });
-  const res = await fetch(url.toString());
+  const token = localStorage.getItem('token');
+  const res = await fetch(url.toString(), {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail || 'API request failed');
