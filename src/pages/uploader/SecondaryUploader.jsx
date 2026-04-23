@@ -416,14 +416,14 @@ export default function SecondaryUploader() {
         </div>
         <textarea value={pasteText} onChange={e => setPasteText(e.target.value)} placeholder="Paste your Excel/Sheets data here..." />
         <div>
-          <button className="btn btn-green" onClick={handlePasteParse} disabled={pasteLoading}>Parse Data</button>
-          <button className="btn btn-gray" onClick={() => { setPasteText(''); setPasteData([]); setPasteMsg(null); setPasteMeta(EMPTY_AMZ_META); }} disabled={pasteLoading}>Clear</button>
+          <button className="btn btn-primary" onClick={handlePasteParse} disabled={pasteLoading}>Parse Data</button>
+          <button className="btn btn-secondary" onClick={() => { setPasteText(''); setPasteData([]); setPasteMsg(null); setPasteMeta(EMPTY_AMZ_META); }} disabled={pasteLoading}>Clear</button>
         </div>
         {pasteData.length > 0 && (
           <div>
             <h3><BarChart2 size={16} /> Preview <span className="row-badge">{pasteData.length} rows</span></h3>
             <PreviewTable data={pasteData} />
-            <button className="btn btn-green" onClick={() => handleInsert('paste')} disabled={pasteLoading} style={{ marginTop: 15 }}>
+            <button className="btn btn-primary" onClick={() => handleInsert('paste')} disabled={pasteLoading}>
               {pasteLoading ? <><Loader2 size={14} className="spin" /> Inserting...</> : 'Insert All Data'}
             </button>
           </div>
@@ -454,19 +454,19 @@ export default function SecondaryUploader() {
         >
           <input ref={csvInputRef} type="file" accept=".csv,.tsv,.txt" style={{ display: 'none' }}
             onChange={e => { if (e.target.files.length > 0) handleFileRead(e.target.files[0], 'csv'); }} />
-          <UploadCloud size={48} style={{ color: '#3ECF8E' }} />
+          <UploadCloud size={40} style={{ color: '#667eea' }} />
           <div>Click to upload or drag &amp; drop</div>
-          <div style={{ fontSize: 12, color: '#999' }}>CSV, TSV files</div>
+          <div className="upload-box-hint">CSV, TSV files</div>
         </div>
         {csvData.length > 0 && (
           <div>
             <h3><BarChart2 size={16} /> Preview <span className="row-badge">{csvData.length} rows</span></h3>
             <PreviewTable data={csvData} />
             <div>
-              <button className="btn btn-green" onClick={() => handleInsert('csv')} disabled={csvLoading}>
+              <button className="btn btn-primary" onClick={() => handleInsert('csv')} disabled={csvLoading}>
                 {csvLoading ? <><Loader2 size={14} className="spin" /> Inserting...</> : 'Insert All Data'}
               </button>
-              <button className="btn btn-gray" onClick={() => { setCsvData([]); setCsvMsg(null); setCsvMeta(EMPTY_AMZ_META); }} disabled={csvLoading}>Clear</button>
+              <button className="btn btn-secondary" onClick={() => { setCsvData([]); setCsvMsg(null); setCsvMeta(EMPTY_AMZ_META); }} disabled={csvLoading}>Clear</button>
             </div>
           </div>
         )}
