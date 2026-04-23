@@ -18,6 +18,23 @@ async function fetchAPI(path, params = {}) {
   return res.json();
 }
 
+async function postAPI(path, body = {}) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || 'API request failed');
+  }
+  return res.json();
+}
+
 // ─── Dashboard ───
 export const dashboardAPI = {
   getTableCounts: () => fetchAPI('/api/dashboard/table-counts'),
@@ -35,6 +52,20 @@ export const platformAPI = {
   getPOs: (slug, opts = {}) => fetchAPI(`/api/platform/${slug}/pos`, opts),
   getInventoryMatch: (slug, sku) =>
     fetchAPI(`/api/platform/${slug}/inventory-match`, { sku }),
+};
+
+// ─── Auth ───
+export const authAPI = {
+  me: () => fetchAPI('/api/auth/me'),
+  getPermissions: () => fetchAPI('/api/auth/permissions'),
+  changePassword: (current_password, new_password) =>
+    postAPI('/api/auth/change-password', { current_password, new_password }),
+};
+
+// ─── Notifications ───
+export const notificationsAPI = {
+  getAll: () => fetchAPI('/api/notifications'),
+  markAllRead: () => postAPI('/api/notifications/mark-all-read'),
 };
 
 // ─── SAP ───
