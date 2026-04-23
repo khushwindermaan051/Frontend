@@ -14,6 +14,8 @@ import PlatformDistributors from './pages/platform/PlatformDistributors';
 import PlatformLandingRate from './pages/platform/PlatformLandingRate';
 import Distributors from './pages/Distributors';
 import UploadPage from './pages/UploadPage';
+import InventoryUploader from './pages/uploader/InventoryUploader';
+import SecondaryUploader from './pages/uploader/SecondaryUploader';
 import './App.css';
 
 function App() {
@@ -59,7 +61,9 @@ function App() {
               path="/upload/inventory"
               element={
                 <ProtectedRoute>
-                  <UploadPage title="Inventory Upload" src="/uploader/inventory.html" />
+                  <UploadPage title="Inventory Upload">
+                    <InventoryUploader />
+                  </UploadPage>
                 </ProtectedRoute>
               }
             />
@@ -67,7 +71,9 @@ function App() {
               path="/upload/secondary"
               element={
                 <ProtectedRoute>
-                  <UploadPage title="Secondary Upload" src="/uploader/secondary.html" />
+                  <UploadPage title="Secondary Upload">
+                    <SecondaryUploader />
+                  </UploadPage>
                 </ProtectedRoute>
               }
             />

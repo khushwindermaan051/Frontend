@@ -1,3 +1,4 @@
+import jivoLogo from '../assets/logos/jivo.jpg';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -7,7 +8,7 @@ import { dashboardAPI } from '../lib/api';
 import {
   LayoutDashboard, Users, Upload, FileUp, Settings, Bell,
   Sun, Moon, Monitor, User, Shield, ChevronRight, ChevronDown,
-  LogOut, ArrowRight, BarChart3,
+  LogOut, ArrowRight, BarChart3, Menu,
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -877,6 +878,7 @@ export default function Dashboard() {
   const [activeTable, setActiveTable] = useState('');
   const [collapsed, setCollapsed] = useState(false);
   const [hoverOpen, setHoverOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [tableCounts, setTableCounts] = useState({});
   const [loadingCounts, setLoadingCounts] = useState(true);
   const [alerts, setAlerts] = useState([]);
@@ -905,6 +907,9 @@ export default function Dashboard() {
   const [showPwd, setShowPwd] = useState({ current: false, next: false, confirm: false });
 
   const isOpen = !collapsed || hoverOpen;
+
+  // Close mobile sidebar on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   // Open settings view if navigated here from platform with openSettings flag
   useEffect(() => {
@@ -1117,22 +1122,22 @@ export default function Dashboard() {
 
   return (
     <div className="app-layout">
+      {mobileOpen && <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />}
       {/* Sidebar */}
       <aside
-        className={`sidebar ${collapsed && !hoverOpen ? 'collapsed' : ''} ${hoverOpen ? 'hover-open' : ''}`}
+        className={`sidebar ${collapsed && !hoverOpen ? 'collapsed' : ''} ${hoverOpen ? 'hover-open' : ''} ${mobileOpen ? 'mobile-open' : ''}`}
         onMouseEnter={handleSidebarEnter}
         onMouseLeave={handleSidebarLeave}
       >
         <div
           className="sidebar-brand"
-          onClick={goHome}
+          onClick={() => window.location.reload()}
           style={{ cursor: 'pointer' }}
         >
-          <div className="brand-logo">M</div>
+          <img className="brand-logo-img" src={jivoLogo} alt="Jivo" />
           {isOpen && (
             <div className="brand-info">
-              <span className="brand-name">MPEMS</span>
-              <span className="brand-sub">Dashboard</span>
+              <span className="brand-name">Jivo</span>
             </div>
           )}
         </div>
@@ -1237,6 +1242,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="main-area">
         <header className="topbar">
+          <button className="mobile-menu-btn" onClick={() => setMobileOpen((o) => !o)} title="Menu"><Menu size={20} /></button>
           <div className="topbar-title">
             {view === 'home' ? (
               <h1>Dashboard</h1>

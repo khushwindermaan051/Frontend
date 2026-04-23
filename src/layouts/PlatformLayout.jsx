@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import PlatformContext from '../context/PlatformContext';
 import { getPlatformConfig } from '../config/platforms';
-import { Bell, Settings, Sun, Moon, Monitor, ChevronRight } from 'lucide-react';
+import { Bell, Settings, Sun, Moon, Monitor, ChevronRight, Menu } from 'lucide-react';
+import { notificationsAPI } from '../lib/api';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -26,24 +27,26 @@ export default function PlatformLayout() {
   const location = useLocation();
   const config = getPlatformConfig(slug);
 
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifUnread, setNotifUnread] = useState(0);
   const notifRef = useRef(null);
 
+  // Close mobile sidebar on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
   // Derive current page label from URL
   const subPath = location.pathname.replace(`/platform/${slug}`, '').replace(/^\//, '');
   const pageLabel = PAGE_LABELS[subPath] ?? subPath;
 
-  // Fetch notifications
+  // Fetch notifications (cached 60 s — re-mounting layout within the TTL is free)
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
     const fetchNotifs = () => {
-      fetch(`${API_BASE}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => (r.ok ? r.json() : Promise.reject()))
+      notificationsAPI
+        .getAll()
         .then((data) => {
           const list = data.notifications || data || [];
           setNotifications(list);
@@ -107,10 +110,11 @@ export default function PlatformLayout() {
   return (
     <PlatformContext.Provider value={config}>
       <div className="app-layout" style={{ '--platform-color': config.color }}>
-        <aside className="sidebar plat-sidebar">
+        {mobileOpen && <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />}
+        <aside className={`sidebar plat-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
           <div
             className="sidebar-brand"
-            onClick={() => navigate(`/platform/${slug}`)}
+            onClick={() => window.location.reload()}
             style={{ cursor: 'pointer' }}
           >
             {config.logo ? (
@@ -132,7 +136,6 @@ export default function PlatformLayout() {
             </div>
             <div className="brand-info">
               <span className="brand-name">{config.name}</span>
-              <span className="brand-sub">Platform App</span>
             </div>
           </div>
 
@@ -163,6 +166,7 @@ export default function PlatformLayout() {
         <div className="main-area">
           {/* Topbar */}
           <header className="topbar">
+            <button className="mobile-menu-btn" onClick={() => setMobileOpen((o) => !o)} title="Menu"><Menu size={20} /></button>
             <div className="topbar-title">
               <button
                 className="plat-topbar-dashboard-btn"

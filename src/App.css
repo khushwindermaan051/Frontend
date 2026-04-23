@@ -729,6 +729,7 @@ body {
   width: 100%;
   border: none;
   min-height: 0;
+  overflow-y: auto;
 }
 
 /* Topbar */
@@ -4823,3 +4824,160 @@ body {
 [data-theme="dark"] .lr-modal-header { border-bottom-color: #1a1a2e; }
 [data-theme="dark"] .lr-modal-header h3 { color: #e2e8f0; }
 [data-theme="dark"] .lr-modal-footer { border-top-color: #1a1a2e; }
+
+/* ═══════════════════════════════
+   UPLOAD PAGE NAV ITEMS
+   ═══════════════════════════════ */
+.upload-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  color: #636e72;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+}
+.upload-nav-item:hover { background: #f8f9fc; color: #2d3436; }
+.upload-nav-item.active { background: rgba(102, 126, 234, 0.04); color: #2d3436; font-weight: 600; }
+.upload-nav-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 2px;
+  border: 1px solid #eef0f4;
+}
+.sidebar.collapsed .upload-nav-item { justify-content: center; padding: 8px 0; }
+.sidebar.collapsed .upload-nav-logo { border: none; background: transparent; }
+
+[data-theme="dark"] .upload-nav-item { color: #8888aa; }
+[data-theme="dark"] .upload-nav-item:hover { color: #e2e8f0; background: #1a1a2e; }
+[data-theme="dark"] .upload-nav-item.active { color: #e2e8f0; background: rgba(129, 140, 248, 0.08); }
+[data-theme="dark"] .upload-nav-logo { background: #1a1a2e; border-color: #2a2a40; }
+
+/* ═══════════════════════════════
+   MOBILE RESPONSIVE
+   ═══════════════════════════════ */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  color: #636e72;
+  flex-shrink: 0;
+}
+.mobile-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Show hamburger */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Dim overlay behind open sidebar */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 999;
+  }
+
+  /* Sidebar becomes a fixed off-canvas drawer */
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh !important;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.26s ease;
+    width: 270px !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+  }
+  .sidebar.collapsed {
+    width: 270px !important;
+    transform: translateX(-100%);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Main area takes full width */
+  .main-area {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  /* Topbar padding */
+  .topbar {
+    padding: 0 12px !important;
+    gap: 8px;
+  }
+
+  /* Collapse breadcrumb text on small screens */
+  .plat-topbar-dashboard-btn {
+    font-size: 12px;
+  }
+  .topbar-section {
+    font-size: 12px;
+  }
+
+  /* Summary / stat cards: 2 per row */
+  .plat-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .summary-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* PO layout: single column */
+  .plat-po-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Distributors layout: single column */
+  .dist-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Charts: single column */
+  .charts-grid,
+  .chart-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table container horizontal scroll */
+  .table-wrap,
+  .plat-table-wrap,
+  .dist-orders-table {
+    overflow-x: auto;
+  }
+
+  /* Notification panel full-width */
+  .notif-panel {
+    right: 0;
+    left: 0;
+    width: auto;
+  }
+
+  /* Upload page */
+  .upload-iframe {
+    padding: 12px !important;
+  }
+}

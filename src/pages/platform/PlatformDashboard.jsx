@@ -6,21 +6,22 @@ import { ClipboardList, History } from 'lucide-react';
 
 export default function PlatformDashboard() {
   const config = usePlatform();
-  const [stats, setStats] = useState({
-    inventory: 0,
-    sells: 0,
-    openPOs: 0,
+
+  const [stats, setStats] = useState(() => {
+    const hit = platformAPI.peekStats(config.slug);
+    return hit ?? { inventory: 0, sells: 0, openPOs: 0 };
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !platformAPI.peekStats(config.slug));
 
   useEffect(() => {
-    setLoading(true);
     platformAPI
       .getStats(config.slug)
-      .then((data) => setStats(data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [config]);
+      .then((data) => {
+        setStats(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [config.slug]);
 
   return (
     <>
