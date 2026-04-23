@@ -13,7 +13,10 @@ const PAGE_LABELS = {
   po: 'PO & Stock',
   dispatches: 'Dispatches',
   distributors: 'Distributors',
+  'landing-rate': 'Monthly Landing Rate',
 };
+
+const LANDING_RATE_SLUGS = new Set(['blinkit', 'zepto', 'swiggy', 'bigbasket']);
 
 export default function PlatformLayout() {
   const { slug } = useParams();
@@ -96,6 +99,9 @@ export default function PlatformLayout() {
     { to: `/platform/${slug}/po`, label: 'PO & Stock' },
     { to: `/platform/${slug}/dispatches`, label: 'Dispatches' },
     { to: `/platform/${slug}/distributors`, label: 'Distributors' },
+    ...(LANDING_RATE_SLUGS.has(slug)
+      ? [{ to: `/platform/${slug}/landing-rate`, label: 'Monthly Landing Rate' }]
+      : []),
   ];
 
   return (

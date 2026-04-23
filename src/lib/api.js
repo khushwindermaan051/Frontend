@@ -18,6 +18,23 @@ async function fetchAPI(path, params = {}) {
   return res.json();
 }
 
+async function postAPI(path, body = {}) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || err.error || 'API request failed');
+  }
+  return res.json();
+}
+
 // ─── Dashboard ───
 export const dashboardAPI = {
   getTableCounts: () => fetchAPI('/api/dashboard/table-counts'),
@@ -35,6 +52,19 @@ export const platformAPI = {
   getPOs: (slug, opts = {}) => fetchAPI(`/api/platform/${slug}/pos`, opts),
   getInventoryMatch: (slug, sku) =>
     fetchAPI(`/api/platform/${slug}/inventory-match`, { sku }),
+};
+
+// ─── Monthly Landing Rate ───
+// Platforms supported: blinkit, zepto, swiggy, bigbasket.
+// `mode=effective` returns the rate in force for the given month
+// (falls back to the most recent prior row for each sku); `mode=history`
+// returns every inserted row. Adds are INSERT-only — previous rows remain
+// as an audit trail.
+export const landingRateAPI = {
+  list: (slug, opts = {}) =>
+    fetchAPI(`/api/platform/${slug}/landing-rate`, opts),
+  listSkus: (slug) => fetchAPI(`/api/platform/${slug}/landing-rate/skus`),
+  add: (slug, body) => postAPI(`/api/platform/${slug}/landing-rate/add`, body),
 };
 
 // ─── SAP ───
