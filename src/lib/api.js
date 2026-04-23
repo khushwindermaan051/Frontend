@@ -30,7 +30,7 @@ async function postAPI(path, body = {}) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || 'API request failed');
+    throw new Error(err.detail || err.error || 'API request failed');
   }
   return res.json();
 }
@@ -66,6 +66,14 @@ export const authAPI = {
 export const notificationsAPI = {
   getAll: () => fetchAPI('/api/notifications'),
   markAllRead: () => postAPI('/api/notifications/mark-all-read'),
+};
+
+// ─── Monthly Landing Rate ───
+export const landingRateAPI = {
+  list: (slug, opts = {}) =>
+    fetchAPI(`/api/platform/${slug}/landing-rate`, opts),
+  listSkus: (slug) => fetchAPI(`/api/platform/${slug}/landing-rate/skus`),
+  add: (slug, body) => postAPI(`/api/platform/${slug}/landing-rate/add`, body),
 };
 
 // ─── SAP ───
