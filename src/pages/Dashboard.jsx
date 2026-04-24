@@ -1166,6 +1166,15 @@ export default function Dashboard() {
             {isOpen && <span className="nav-label">Distributors</span>}
           </Link>
 
+          <Link
+            to="/monthly-targets"
+            className="nav-platform-link"
+            title={!isOpen ? 'Monthly Targets' : ''}
+          >
+            <span className="nav-icon"><BarChart3 size={15} /></span>
+            {isOpen && <span className="nav-label">Monthly Targets</span>}
+          </Link>
+
           <div className="nav-divider" />
 
           {/* Platform Apps in sidebar */}

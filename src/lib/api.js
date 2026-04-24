@@ -63,7 +63,10 @@ async function postAPI(path, body = {}) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || err.error || 'API request failed');
+    const e = new Error(err.detail || err.error || 'API request failed');
+    e.status = res.status;
+    e.payload = err;
+    throw e;
   }
   return res.json();
 }
@@ -106,6 +109,27 @@ export const authAPI = {
 export const notificationsAPI = {
   getAll: () => cachedFetchAPI('/api/notifications', {}, 60 * 1000),
   markAllRead: () => postAPI('/api/notifications/mark-all-read'),
+};
+
+// ─── Monthly Targets ───
+// Replicates the "ALL PLATFORM SECONDARY SALES" sheet.
+// - `list` returns rows for a platform (optionally filtered by month/year).
+// - `create` is INSERT-only; throws on 409 if a target for that month exists.
+// - `refresh` recomputes derived columns on a current-month row only.
+// - `dashboard` rolls up every in-scope platform for a given month/year.
+export const monthlyTargetsAPI = {
+  list: (slug, opts = {}) =>
+    fetchAPI(`/api/platform/${slug}/month-targets`, opts),
+  create: (slug, body) =>
+    postAPI(`/api/platform/${slug}/month-targets/add`, body),
+  refresh: (slug, id) =>
+    postAPI(`/api/platform/${slug}/month-targets/${id}/refresh`, {}),
+  // Correct a wrong target. Body: { targets: <new_number>, reason?: <string> }.
+  // Server snapshots the old row into month_target_logs before UPDATE.
+  update: (slug, id, body) =>
+    postAPI(`/api/platform/${slug}/month-targets/${id}/update`, body),
+  dashboard: (opts = {}) =>
+    fetchAPI('/api/platform/month-targets/dashboard', opts),
 };
 
 // ─── Monthly Landing Rate ───

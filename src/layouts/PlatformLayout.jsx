@@ -15,9 +15,16 @@ const PAGE_LABELS = {
   dispatches: 'Dispatches',
   distributors: 'Distributors',
   'landing-rate': 'Monthly Landing Rate',
+  'monthly-targets': 'Monthly Targets',
 };
 
 const LANDING_RATE_SLUGS = new Set(['blinkit', 'zepto', 'swiggy', 'bigbasket']);
+
+// In-scope platforms for Monthly Targets — spec §1 / §8.1. Amazon, JioMart,
+// and Flipkart Grocery are deliberately excluded.
+const MONTHLY_TARGETS_SLUGS = new Set([
+  'blinkit', 'swiggy', 'zepto', 'bigbasket', 'flipkart', 'zomato', 'citymall',
+]);
 
 export default function PlatformLayout() {
   const { slug } = useParams();
@@ -104,6 +111,9 @@ export default function PlatformLayout() {
     { to: `/platform/${slug}/distributors`, label: 'Distributors' },
     ...(LANDING_RATE_SLUGS.has(slug)
       ? [{ to: `/platform/${slug}/landing-rate`, label: 'Monthly Landing Rate' }]
+      : []),
+    ...(MONTHLY_TARGETS_SLUGS.has(slug)
+      ? [{ to: `/platform/${slug}/monthly-targets`, label: 'Monthly Targets' }]
       : []),
   ];
 
