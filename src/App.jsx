@@ -12,6 +12,8 @@ import PlatformPO from './pages/platform/PlatformPO';
 import PlatformDispatches from './pages/platform/PlatformDispatches';
 import PlatformDistributors from './pages/platform/PlatformDistributors';
 import PlatformLandingRate from './pages/platform/PlatformLandingRate';
+import PlatformMonthlyTargets from './pages/platform/PlatformMonthlyTargets';
+import MonthlyTargetsDashboard from './pages/MonthlyTargetsDashboard';
 import Distributors from './pages/Distributors';
 import UploadPage from './pages/UploadPage';
 import './App.css';
@@ -42,6 +44,14 @@ function App() {
               }
             />
             <Route
+              path="/monthly-targets"
+              element={
+                <ProtectedRoute>
+                  <MonthlyTargetsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/platform/:slug"
               element={
                 <ProtectedRoute>
@@ -54,6 +64,7 @@ function App() {
               <Route path="dispatches" element={<PlatformDispatches />} />
               <Route path="distributors" element={<PlatformDistributors />} />
               <Route path="landing-rate" element={<PlatformLandingRate />} />
+              <Route path="monthly-targets" element={<PlatformMonthlyTargets />} />
             </Route>
             <Route
               path="/upload/inventory"

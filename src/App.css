@@ -4823,3 +4823,163 @@ body {
 [data-theme="dark"] .lr-modal-header { border-bottom-color: #1a1a2e; }
 [data-theme="dark"] .lr-modal-header h3 { color: #e2e8f0; }
 [data-theme="dark"] .lr-modal-footer { border-top-color: #1a1a2e; }
+
+/* ─── Monthly Targets ─── */
+.mt-section { margin-top: 24px; }
+.mt-section:first-of-type { margin-top: 16px; }
+
+.mt-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+.mt-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.mt-section-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mt-edit-meta {
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  background: #f1f3f7;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2d3436;
+}
+[data-theme="dark"] .mt-edit-meta { background: #0b0b18; color: #e2e8f0; }
+.mt-section-title-bar {
+  background: #2d3436;
+  color: #fff;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  /* no negative margin — the parent `.card` has overflow:hidden and no
+     padding, so a negative margin would clip the first letter. */
+  margin: 0 0 0 0;
+  border-radius: 12px 12px 0 0;
+}
+
+.mt-empty-target {
+  padding: 18px;
+  background: #f8f9fd;
+  border: 1px dashed #c8cbd9;
+  border-radius: 6px;
+  text-align: center;
+}
+.mt-empty-target p { margin: 0 0 12px; color: #2d3436; }
+
+.mt-set-target {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  min-width: 240px;
+  margin: 0 auto;
+  text-align: left;
+}
+.mt-set-target .lr-add-btn { align-self: stretch; }
+
+.mt-hint {
+  font-size: 12px;
+  color: #636e72;
+  margin: 8px 0 0;
+}
+
+.mt-table { font-size: 13px; }
+.mt-table th {
+  background: #f1f3f7;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mt-table td { white-space: nowrap; }
+
+/* Conditional formatting on % columns (spec §5.2). */
+.mt-pct-green { color: #00a870; font-weight: 600; }
+.mt-pct-amber { color: #d89b00; font-weight: 600; }
+.mt-pct-red   { color: #d63031; font-weight: 600; }
+
+/* Dashboard-specific */
+.mt-card { position: relative; }
+.mt-dashboard-table { min-width: 1100px; }
+
+.mt-sticky-col {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 1;
+}
+.mt-dashboard-table thead .mt-sticky-col { background: #f1f3f7; z-index: 2; }
+.mt-dashboard-table tbody td.mt-sticky-col { background: #fff; }
+.mt-dashboard-table tbody tr:nth-child(even) td.mt-sticky-col { background: #fafbfd; }
+
+.mt-grand-total-row td {
+  background: #edf2fa !important;
+  font-weight: 600;
+  border-top: 2px solid #2d3436;
+}
+.mt-grand-total-row td.mt-sticky-col { background: #edf2fa !important; }
+
+.mt-no-target { color: #b2bec3; font-style: italic; }
+
+/* The combined-dashboard page is top-level (no sidebar/topbar). Since
+   the app-wide `body` is `overflow: hidden`, scrolling has to happen
+   inside this wrapper — hence `height: 100vh` + `overflow-y: auto`
+   rather than `min-height`. */
+.mt-dash-page {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #f8f9fc;
+  animation: fadeIn 0.4s ease;
+}
+.mt-dash-inner {
+  padding: 24px;
+  max-width: 100%;
+}
+
+.mt-dash-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.mt-dash-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3436;
+  flex: 1;
+}
+.mt-dash-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* Dark-theme overrides */
+[data-theme="dark"] .mt-section-title-bar { background: #0b0b18; color: #e2e8f0; }
+[data-theme="dark"] .mt-empty-target { background: #0b0b18; border-color: #2a2a40; color: #8888aa; }
+[data-theme="dark"] .mt-empty-target p { color: #e2e8f0; }
+[data-theme="dark"] .mt-table th { background: #0b0b18; color: #8888aa; }
+[data-theme="dark"] .mt-dashboard-table thead .mt-sticky-col { background: #0b0b18; }
+[data-theme="dark"] .mt-dashboard-table tbody td.mt-sticky-col { background: #111120; }
+[data-theme="dark"] .mt-dashboard-table tbody tr:nth-child(even) td.mt-sticky-col { background: #0e0e1c; }
+[data-theme="dark"] .mt-grand-total-row td { background: #0b0b18 !important; border-top-color: #8888aa; }
+[data-theme="dark"] .mt-grand-total-row td.mt-sticky-col { background: #0b0b18 !important; }
+[data-theme="dark"] .mt-dash-title { color: #e2e8f0; }
+[data-theme="dark"] .mt-hint { color: #8888aa; }
+[data-theme="dark"] .mt-dash-page { background: #0b0b18; }
+
+

@@ -9,13 +9,51 @@ function currentMonthISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
+// Accepts any of: `YYYY-MM-DD`, `YYYY-MM`, ISO timestamp, `DD-MM-YYYY`,
+// `DD/MM/YYYY`. Day-first (Indian) is assumed when the first group is 1-2
+// digits. Returns e.g. "Apr 2026".
 function formatMonth(val) {
-  if (!val) return '-';
-  const s = String(val);
-  const m = s.match(/^(\d{4})-(\d{2})/);
-  if (!m) return s;
-  const date = new Date(`${m[1]}-${m[2]}-01`);
-  return date.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+  if (val == null || val === '') return '-';
+  if (val instanceof Date) {
+    return val.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+  }
+  const s = String(val).trim();
+
+  let year;
+  let monthIdx;
+
+  const isoMatch = s.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/);
+  if (isoMatch) {
+    year = Number(isoMatch[1]);
+    monthIdx = Number(isoMatch[2]) - 1;
+  } else {
+    const dmyMatch = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (dmyMatch) {
+      year = Number(dmyMatch[3]);
+      monthIdx = Number(dmyMatch[2]) - 1;
+    }
+  }
+
+  if (year == null || Number.isNaN(year) || monthIdx < 0 || monthIdx > 11) {
+    return s;
+  }
+  return new Date(year, monthIdx, 1).toLocaleString(undefined, {
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatDateTime(val) {
+  if (val == null || val === '') return '-';
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return String(val);
+  return d.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export default function PlatformLandingRate() {
@@ -259,11 +297,12 @@ export default function PlatformLandingRate() {
                     <th>Basic Rate</th>
                     <th>Format</th>
                     <th>Month</th>
+                    <th>Created</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r, i) => (
-                    <tr key={`${r.sku_code}-${r.month}-${i}`}>
+                    <tr key={`${r.sku_code}-${r.month}-${r.created_at ?? i}`}>
                       <td className="row-num">{page * PAGE_SIZE + i + 1}</td>
                       <td style={{ fontWeight: 600 }}>{r.sku_code}</td>
                       <td>{r.sku_name}</td>
@@ -285,6 +324,9 @@ export default function PlatformLandingRate() {
                       </td>
                       <td>{r.format || '-'}</td>
                       <td>{formatMonth(r.month)}</td>
+                      <td style={{ color: '#636e72', fontSize: '12px' }}>
+                        {formatDateTime(r.created_at)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
