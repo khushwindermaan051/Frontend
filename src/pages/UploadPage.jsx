@@ -1,13 +1,17 @@
+import jivoLogo from '../assets/logos/jivo.jpg';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Sun, Moon, Monitor, Settings, ChevronRight } from 'lucide-react';
+import { UploaderProvider, useUploaderNav } from '../context/UploaderContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-export default function UploadPage({ title, src }) {
+function UploadPageInner({ title, children }) {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { navItems } = useUploaderNav();
+  const hasNav = navItems.length > 0;
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -58,23 +62,52 @@ export default function UploadPage({ title, src }) {
 
   return (
     <div className="app-layout">
-      {/* Minimal sidebar — just settings button */}
-      <aside className="sidebar collapsed">
-        <div className="sidebar-brand" style={{ justifyContent: 'center', padding: '20px 14px' }}>
-          <div className="brand-logo" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>M</div>
+      <aside className={`sidebar ${hasNav ? '' : 'collapsed'}`}>
+        <div
+          className="sidebar-brand"
+          onClick={() => window.location.reload()}
+          style={{ cursor: 'pointer' }}
+        >
+          <img className="brand-logo-img" src={jivoLogo} alt="Jivo" />
+          {hasNav && (
+            <div className="brand-info">
+              <span className="brand-name">Jivo</span>
+            </div>
+          )}
         </div>
-        <nav className="sidebar-nav" />
+
+        <nav className="sidebar-nav">
+          {hasNav && (
+            <>
+              <div className="nav-section-title">Platforms</div>
+              {navItems.map((item) => (
+                <button
+                  key={item.key}
+                  className={`upload-nav-item ${item.active ? 'active' : ''}`}
+                  onClick={item.onSelect}
+                  title={item.name}
+                >
+                  <span className="nav-icon">
+                    <img src={item.logo} alt={item.name} className="upload-nav-logo" />
+                  </span>
+                  <span className="nav-label">{item.name}</span>
+                </button>
+              ))}
+            </>
+          )}
+        </nav>
+
         <button
           className="sidebar-settings-btn"
           onClick={() => navigate('/dashboard', { state: { openSettings: true } })}
           title="Settings"
         >
           <span className="sidebar-settings-icon"><Settings size={15} /></span>
+          {hasNav && <span className="nav-label">Settings</span>}
         </button>
       </aside>
 
       <div className="main-area">
-        {/* Topbar */}
         <header className="topbar">
           <div className="topbar-title">
             <button
@@ -138,13 +171,18 @@ export default function UploadPage({ title, src }) {
           </div>
         </header>
 
-        {/* Upload content in iframe */}
-        <iframe
-          src={src}
-          className="upload-iframe"
-          title={title}
-        />
+        <div className="upload-iframe">
+          {children}
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function UploadPage({ title, children }) {
+  return (
+    <UploaderProvider>
+      <UploadPageInner title={title}>{children}</UploadPageInner>
+    </UploaderProvider>
   );
 }

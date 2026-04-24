@@ -7,7 +7,11 @@
       "Bash(git -C /c/Users/khush/OneDrive/Desktop/Frontend diff --name-status HEAD)",
       "Bash(xargs grep *)",
       "Bash(xargs ls *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(npx vite *)",
+      "Bash(npm run *)"
     ]
   }
 }
