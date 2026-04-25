@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { API_BASE } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in ms
 const AuthContext = createContext({});
 

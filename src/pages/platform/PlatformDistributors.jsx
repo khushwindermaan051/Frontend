@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePlatform } from '../../context/PlatformContext';
-import { sapAPI } from '../../lib/api';
+import { sapAPI } from '../../services/api';
 
 const PAGE_SIZE = 50;
 

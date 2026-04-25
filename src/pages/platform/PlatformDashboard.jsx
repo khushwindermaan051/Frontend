@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlatform } from '../../context/PlatformContext';
-import { platformAPI } from '../../lib/api';
+import { platformAPI } from '../../services/api';
 import { ClipboardList, History } from 'lucide-react';
 
 export default function PlatformDashboard() {

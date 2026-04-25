@@ -1,75 +1,14 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { sapAPI } from '../lib/api';
-import { Bell, Settings, Sun, Moon, Monitor, ChevronRight, Users, BarChart3 } from 'lucide-react';
-import jivoLogo from '../assets/logos/jivo.jpg';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { sapAPI } from '../services/api';
+import { Users, BarChart3 } from 'lucide-react';
+import { Sidebar, NavItem, JivoBrand } from '../components/layout/Sidebar';
+import { Topbar, BreadcrumbLink, BreadcrumbSep, BreadcrumbCurrent } from '../components/layout/Topbar';
 
 const PAGE_SIZE = 50;
 
 export default function Distributors() {
-  const { user, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [notifUnread, setNotifUnread] = useState(0);
-  const notifRef = useRef(null);
-
-  const [collapsed, setCollapsed] = useState(false);
-  const [hoverOpen, setHoverOpen] = useState(false);
-  const isOpen = !collapsed || hoverOpen;
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const fetchNotifs = () => {
-      fetch(`${API_BASE}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .then((data) => {
-          const list = data.notifications || data || [];
-          setNotifications(list);
-          setNotifUnread(data.unread_count ?? list.filter((n) => !n.read).length);
-        })
-        .catch(() => {});
-    };
-    fetchNotifs();
-    const id = setInterval(fetchNotifs, 60000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const handleMarkAllRead = () => {
-    const token = localStorage.getItem('token');
-    fetch(`${API_BASE}/api/notifications/mark-all-read`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    }).catch(() => {});
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setNotifUnread(0);
-  };
-
-  const timeAgo = (dateStr) => {
-    if (!dateStr) return '';
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const h = Math.floor(diff / 3600000);
-    if (h < 1) return 'Just now';
-    if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
-  };
 
   const [distributors, setDistributors] = useState([]);
   const [total, setTotal] = useState(0);
@@ -159,153 +98,35 @@ export default function Distributors() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
-  };
-
   return (
     <div className="app-layout">
-      {/* Sidebar */}
-      <aside
-        className={`sidebar dist-sidebar ${collapsed && !hoverOpen ? 'collapsed' : ''} ${hoverOpen ? 'hover-open' : ''}`}
-        onMouseEnter={() => collapsed && setHoverOpen(true)}
-        onMouseLeave={() => setHoverOpen(false)}
+      <Sidebar
+        brand={<JivoBrand onClick={() => navigate('/dashboard')} />}
+        variant="dist-sidebar"
       >
-        <div
-          className="sidebar-brand"
-          onClick={() => navigate('/dashboard')}
-          style={{ cursor: 'pointer' }}
-        >
-          <img className="brand-logo-img" src={jivoLogo} alt="Jivo" />
-          {isOpen && (
-            <div className="brand-info">
-              <span className="brand-name">Jivo</span>
-            </div>
-          )}
-        </div>
+        <NavItem
+          icon={<Users size={15} />}
+          label="Distributors"
+          active
+          className="plat-nav-item"
+        />
+        <NavItem
+          icon={<BarChart3 size={15} />}
+          label="Monthly Targets"
+          onClick={() => navigate('/monthly-targets')}
+          className="plat-nav-item"
+        />
+        <div className="nav-divider" />
+      </Sidebar>
 
-        <nav className="sidebar-nav">
-          <button
-            className="plat-nav-item active"
-            title={!isOpen ? 'Distributors' : ''}
-          >
-            <span className="nav-icon"><Users size={15} /></span>
-            {isOpen && <span className="nav-label">Distributors</span>}
-          </button>
-          <button
-            className="plat-nav-item"
-            onClick={() => navigate('/monthly-targets')}
-            title={!isOpen ? 'Monthly Targets' : ''}
-          >
-            <span className="nav-icon"><BarChart3 size={15} /></span>
-            {isOpen && <span className="nav-label">Monthly Targets</span>}
-          </button>
-          <div className="nav-divider" />
-        </nav>
-
-        <button
-          className="sidebar-settings-btn"
-          onClick={() => navigate('/dashboard', { state: { openSettings: true } })}
-          title="Settings"
-        >
-          <span className="sidebar-settings-icon"><Settings size={15} /></span>
-          {isOpen && <span className="nav-label">Settings</span>}
-        </button>
-
-        <button
-          className="collapse-btn"
-          onClick={() => {
-            setCollapsed(!collapsed);
-            setHoverOpen(false);
-          }}
-        >
-          {collapsed && !hoverOpen ? '›' : '‹'}
-        </button>
-      </aside>
-
-      {/* Main area */}
       <div className="main-area">
-        <header className="topbar">
-          <div className="topbar-title">
-            <button
-              className="plat-topbar-dashboard-btn"
-              onClick={() => navigate('/dashboard')}
-              title="Go to Main Dashboard"
-            >
-              Dashboard
-            </button>
-            <span className="plat-topbar-sep"><ChevronRight size={14} /></span>
-            <span className="topbar-section">Distributors</span>
-          </div>
-
-          <div className="topbar-actions">
-            <div className="theme-toggle">
-              <button
-                className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
-                onClick={() => setTheme('light')}
-                title="Light theme"
-              ><Sun size={14} /></button>
-              <button
-                className={`theme-btn ${theme === 'default' ? 'active' : ''}`}
-                onClick={() => setTheme('default')}
-                title="System default"
-              ><Monitor size={14} /></button>
-              <button
-                className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
-                onClick={() => setTheme('dark')}
-                title="Dark theme"
-              ><Moon size={14} /></button>
-            </div>
-
-            <div className="notif-wrapper" ref={notifRef}>
-              <button
-                className={`notif-bell-btn ${notifOpen ? 'active' : ''}`}
-                onClick={() => setNotifOpen((o) => !o)}
-                title="Notifications"
-              >
-                <Bell size={17} />
-                {notifUnread > 0 && (
-                  <span className="notif-badge">
-                    {notifUnread > 99 ? '99+' : notifUnread}
-                  </span>
-                )}
-              </button>
-
-              {notifOpen && (
-                <div className="notif-panel">
-                  <div className="notif-panel-header">
-                    <span className="notif-panel-title">Notifications</span>
-                    {notifUnread > 0 && (
-                      <button className="notif-mark-read" onClick={handleMarkAllRead}>
-                        ✓ Mark all read
-                      </button>
-                    )}
-                  </div>
-                  <div className="notif-list">
-                    {notifications.length === 0 ? (
-                      <div className="notif-empty">No notifications</div>
-                    ) : (
-                      notifications.slice(0, 8).map((n, i) => (
-                        <div key={i} className={`notif-item ${!n.read ? 'unread' : ''}`}>
-                          <div className="notif-item-title">{n.title || n.message}</div>
-                          {n.body && <div className="notif-item-body">{n.body}</div>}
-                          <div className="notif-item-time">{timeAgo(n.created_at || n.timestamp)}</div>
-                          {!n.read && <span className="notif-dot" />}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <div className="notif-panel-footer">
-                    <button className="notif-view-all" onClick={() => setNotifOpen(false)}>
-                      View all notifications
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+        <Topbar>
+          <BreadcrumbLink onClick={() => navigate('/dashboard')} title="Go to Main Dashboard">
+            Dashboard
+          </BreadcrumbLink>
+          <BreadcrumbSep />
+          <BreadcrumbCurrent>Distributors</BreadcrumbCurrent>
+        </Topbar>
 
         <div className="plat-content">
           <div className="dist-layout">

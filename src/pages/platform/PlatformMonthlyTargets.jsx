@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePlatform } from '../../context/PlatformContext';
-import { monthlyTargetsAPI } from '../../lib/api';
+import { monthlyTargetsAPI } from '../../services/api';
+import { formatDate, formatNum, formatPct, pctClass } from '../../utils/formatters';
 
 // Platforms that are OUT of scope per spec §8.1. Everyone else is supported.
 const OUT_OF_SCOPE = new Set(['amazon', 'jiomart', 'flipkart_grocery']);
@@ -20,45 +21,6 @@ function parseMonthISO(s) {
 function isCurrentMonth(month, year) {
   const d = new Date();
   return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
-}
-
-function formatDate(val) {
-  if (!val) return '—';
-  const d = new Date(val);
-  if (Number.isNaN(d.getTime())) return String(val);
-  return d.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
-function formatNum(val, digits = 0) {
-  if (val == null) return '—';
-  const n = Number(val);
-  if (!Number.isFinite(n)) return '—';
-  return n.toLocaleString(undefined, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
-}
-
-function formatPct(val) {
-  if (val == null) return '—';
-  const n = Number(val);
-  if (!Number.isFinite(n)) return '—';
-  return `${(n * 100).toFixed(1)}%`;
-}
-
-// Spec §5.2: ≥100 green, 60-99 amber, <60 red. Negative growth_pct → red.
-function pctClass(val, { negativeIsBad = false } = {}) {
-  if (val == null) return '';
-  const pct = Number(val) * 100;
-  if (!Number.isFinite(pct)) return '';
-  if (negativeIsBad && pct < 0) return 'mt-pct-red';
-  if (pct >= 100) return 'mt-pct-green';
-  if (pct >= 60) return 'mt-pct-amber';
-  return 'mt-pct-red';
 }
 
 export default function PlatformMonthlyTargets() {

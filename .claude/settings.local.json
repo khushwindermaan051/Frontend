@@ -11,7 +11,11 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(npx vite *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(sed -i '1098,1207d' src/pages/Dashboard.jsx)",
+      "Bash(sed -n '1095,1102p' src/pages/Dashboard.jsx)",
+      "Bash(sed -i '42,882d' src/pages/Dashboard.jsx)",
+      "Bash(sed -n '40,46p' src/pages/Dashboard.jsx)"
     ]
   }
 }

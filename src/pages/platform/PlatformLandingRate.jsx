@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePlatform } from '../../context/PlatformContext';
-import { landingRateAPI } from '../../lib/api';
+import { landingRateAPI } from '../../services/api';
+import { formatDateTime } from '../../utils/formatters';
 
 const PAGE_SIZE = 50;
 
@@ -40,19 +41,6 @@ function formatMonth(val) {
   return new Date(year, monthIdx, 1).toLocaleString(undefined, {
     month: 'short',
     year: 'numeric',
-  });
-}
-
-function formatDateTime(val) {
-  if (val == null || val === '') return '-';
-  const d = new Date(val);
-  if (Number.isNaN(d.getTime())) return String(val);
-  return d.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 }
 

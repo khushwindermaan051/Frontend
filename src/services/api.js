@@ -1,6 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// ─── In-memory response cache (cleared on page refresh) ───
 const _cache = new Map();
 
 function _cacheGet(key, ttlMs) {
@@ -71,7 +70,6 @@ async function postAPI(path, body = {}) {
   return res.json();
 }
 
-// ─── Dashboard ───
 export const dashboardAPI = {
   getTableCounts: () => fetchAPI('/api/dashboard/table-counts'),
   getTableCount: (table) => fetchAPI(`/api/dashboard/table-count/${table}`),
@@ -82,13 +80,11 @@ export const dashboardAPI = {
   getInventoryCharts: () => fetchAPI('/api/dashboard/inventory-charts'),
 };
 
-// ─── Platform ───
 const STATS_TTL = 5 * 60 * 1000;
 
 export const platformAPI = {
   getStats: (slug) =>
     cachedFetchAPI(`/api/platform/${slug}/stats`, {}, STATS_TTL),
-  // Synchronous cache peek — returns null if no cache or expired
   peekStats: (slug) =>
     _cacheGet(buildUrl(`/api/platform/${slug}/stats`), STATS_TTL),
   getPOs: (slug, opts = {}) =>
@@ -97,7 +93,6 @@ export const platformAPI = {
     cachedFetchAPI(`/api/platform/${slug}/inventory-match`, { sku }, 5 * 60 * 1000),
 };
 
-// ─── Auth ───
 export const authAPI = {
   me: () => fetchAPI('/api/auth/me'),
   getPermissions: () => fetchAPI('/api/auth/permissions'),
@@ -105,18 +100,15 @@ export const authAPI = {
     postAPI('/api/auth/change-password', { current_password, new_password }),
 };
 
-// ─── Notifications ───
 export const notificationsAPI = {
   getAll: () => cachedFetchAPI('/api/notifications', {}, 60 * 1000),
   markAllRead: () => postAPI('/api/notifications/mark-all-read'),
 };
 
-// ─── Monthly Targets ───
 // Replicates the "ALL PLATFORM SECONDARY SALES" sheet.
-// - `list` returns rows for a platform (optionally filtered by month/year).
-// - `create` is INSERT-only; throws on 409 if a target for that month exists.
-// - `refresh` recomputes derived columns on a current-month row only.
-// - `dashboard` rolls up every in-scope platform for a given month/year.
+// `create` is INSERT-only and throws on 409 if a target for that month exists.
+// `refresh` recomputes derived columns on a current-month row only.
+// `update` snapshots the old row into month_target_logs server-side before UPDATE.
 export const monthlyTargetsAPI = {
   list: (slug, opts = {}) =>
     fetchAPI(`/api/platform/${slug}/month-targets`, opts),
@@ -124,15 +116,12 @@ export const monthlyTargetsAPI = {
     postAPI(`/api/platform/${slug}/month-targets/add`, body),
   refresh: (slug, id) =>
     postAPI(`/api/platform/${slug}/month-targets/${id}/refresh`, {}),
-  // Correct a wrong target. Body: { targets: <new_number>, reason?: <string> }.
-  // Server snapshots the old row into month_target_logs before UPDATE.
   update: (slug, id, body) =>
     postAPI(`/api/platform/${slug}/month-targets/${id}/update`, body),
   dashboard: (opts = {}) =>
     fetchAPI('/api/platform/month-targets/dashboard', opts),
 };
 
-// ─── Monthly Landing Rate ───
 export const landingRateAPI = {
   list: (slug, opts = {}) =>
     cachedFetchAPI(`/api/platform/${slug}/landing-rate`, opts, 2 * 60 * 1000),
@@ -145,7 +134,6 @@ export const landingRateAPI = {
   },
 };
 
-// ─── SAP ───
 export const sapAPI = {
   getDistributors: (opts = {}) => fetchAPI('/api/sap/distributors', opts),
   getDistributor: (cardCode) => fetchAPI(`/api/sap/distributors/${cardCode}`),
