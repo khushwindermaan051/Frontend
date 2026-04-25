@@ -1257,18 +1257,14 @@ export default function Dashboard() {
               <h1>Dashboard</h1>
             ) : view === 'settings' ? (
               <>
-                <button className="back-btn" onClick={goHome} title="Back to Dashboard">&larr;</button>
+                <button className="topbar-back-link" onClick={goHome} title="Back to Dashboard">Dashboard</button>
+                <span className="topbar-sep">›</span>
                 <h1>Settings</h1>
               </>
             ) : (
               <>
-                <button
-                  className="back-btn"
-                  onClick={goHome}
-                  title="Back to Dashboard"
-                >
-                  &larr;
-                </button>
+                <button className="topbar-back-link" onClick={goHome} title="Back to Dashboard">Dashboard</button>
+                <span className="topbar-sep">›</span>
                 <h1>{formatLabel(activeTable)}</h1>
                 <span className="topbar-section">
                   {SECTIONS[activeSection].label}

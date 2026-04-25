@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { sapAPI } from '../lib/api';
-import { Bell, Settings, Sun, Moon, Monitor, ChevronRight } from 'lucide-react';
+import { Bell, Settings, Sun, Moon, Monitor, ChevronRight, Users, BarChart3 } from 'lucide-react';
+import jivoLogo from '../assets/logos/jivo.jpg';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -18,6 +19,10 @@ export default function Distributors() {
   const [notifications, setNotifications] = useState([]);
   const [notifUnread, setNotifUnread] = useState(0);
   const notifRef = useRef(null);
+
+  const [collapsed, setCollapsed] = useState(false);
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const isOpen = !collapsed || hoverOpen;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -162,23 +167,40 @@ export default function Distributors() {
   return (
     <div className="app-layout">
       {/* Sidebar */}
-      <aside className="sidebar dist-sidebar">
+      <aside
+        className={`sidebar dist-sidebar ${collapsed && !hoverOpen ? 'collapsed' : ''} ${hoverOpen ? 'hover-open' : ''}`}
+        onMouseEnter={() => collapsed && setHoverOpen(true)}
+        onMouseLeave={() => setHoverOpen(false)}
+      >
         <div
           className="sidebar-brand"
           onClick={() => navigate('/dashboard')}
           style={{ cursor: 'pointer' }}
         >
-          <div className="brand-logo" style={{ background: '#6c5ce7' }}>
-            S
-          </div>
-          <div className="brand-info">
-            <span className="brand-name">SAP B1</span>
-            <span className="brand-sub">Distributors</span>
-          </div>
+          <img className="brand-logo-img" src={jivoLogo} alt="Jivo" />
+          {isOpen && (
+            <div className="brand-info">
+              <span className="brand-name">Jivo</span>
+            </div>
+          )}
         </div>
 
         <nav className="sidebar-nav">
-          <button className="plat-nav-item active">Distributors</button>
+          <button
+            className="plat-nav-item active"
+            title={!isOpen ? 'Distributors' : ''}
+          >
+            <span className="nav-icon"><Users size={15} /></span>
+            {isOpen && <span className="nav-label">Distributors</span>}
+          </button>
+          <button
+            className="plat-nav-item"
+            onClick={() => navigate('/monthly-targets')}
+            title={!isOpen ? 'Monthly Targets' : ''}
+          >
+            <span className="nav-icon"><BarChart3 size={15} /></span>
+            {isOpen && <span className="nav-label">Monthly Targets</span>}
+          </button>
           <div className="nav-divider" />
         </nav>
 
@@ -188,9 +210,18 @@ export default function Distributors() {
           title="Settings"
         >
           <span className="sidebar-settings-icon"><Settings size={15} /></span>
-          <span className="nav-label">Settings</span>
+          {isOpen && <span className="nav-label">Settings</span>}
         </button>
 
+        <button
+          className="collapse-btn"
+          onClick={() => {
+            setCollapsed(!collapsed);
+            setHoverOpen(false);
+          }}
+        >
+          {collapsed && !hoverOpen ? '›' : '‹'}
+        </button>
       </aside>
 
       {/* Main area */}

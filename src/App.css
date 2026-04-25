@@ -1170,28 +1170,29 @@ body {
   margin: 6px 12px;
 }
 
-/* ─── BACK BUTTON ─── */
-.back-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #eef0f4;
-  background: #fff;
+/* ─── TOPBAR BACK LINK ─── */
+.topbar-back-link {
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
   cursor: pointer;
-  font-size: 16px;
-  color: #636e72;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+  border-radius: 6px;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
-.back-btn:hover {
-  color: #667eea;
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.04);
-  transform: translateX(-2px);
+.topbar-back-link:hover {
+  color: #4f5ed1;
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.topbar-sep {
+  color: #9aa0a6;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
 .topbar-title {
@@ -1908,7 +1909,9 @@ body {
 }
 
 .plat-nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   padding: 10px 20px;
   font-size: 13px;
@@ -1922,6 +1925,20 @@ body {
   font-family: inherit;
   transition: all 0.2s ease;
   position: relative;
+}
+
+.plat-nav-item .nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar.collapsed .plat-nav-item {
+  justify-content: center;
+  padding: 10px 0;
 }
 
 .plat-nav-item::before {
@@ -3529,13 +3546,17 @@ body {
   color: #4a4a6a;
 }
 
-[data-theme="dark"] .back-btn {
-  color: #8888aa;
+[data-theme="dark"] .topbar-back-link {
+  color: #a3b1ff;
 }
 
-[data-theme="dark"] .back-btn:hover {
+[data-theme="dark"] .topbar-back-link:hover {
   color: #e2e8f0;
-  background: #1a1a2e;
+  background: rgba(102, 126, 234, 0.15);
+}
+
+[data-theme="dark"] .topbar-sep {
+  color: #4a4a6a;
 }
 
 [data-theme="dark"] .theme-toggle {
@@ -5092,7 +5113,8 @@ body {
    the app-wide `body` is `overflow: hidden`, scrolling has to happen
    inside this wrapper — hence `height: 100vh` + `overflow-y: auto`. */
 .mt-dash-page {
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   background: #f8f9fc;

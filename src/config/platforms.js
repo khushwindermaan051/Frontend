@@ -5,6 +5,9 @@ import amazonLogo from '../assets/logos/amazon.png';
 import bigbasketLogo from '../assets/logos/bigbasket.png';
 import swiggyLogo from '../assets/logos/swiggy.png';
 import flipkartLogo from '../assets/logos/flipkart.png';
+import fgroceryLogo from '../assets/logos/fgrocery.jpg';
+import zomatoLogo from '../assets/logos/zomato.jpg';
+import citymallLogo from '../assets/logos/citymall.png';
 
 const SHARED = {
   masterPO: 'master_po',
@@ -138,7 +141,7 @@ export const PLATFORMS = {
     name: 'Flipkart Grocery',
     color: '#2874f0',
     icon: 'FG',
-    logo: flipkartLogo,
+    logo: fgroceryLogo,
     tables: {
       inventory: '',
       secondarySells: 'fk_grocery',
@@ -155,7 +158,7 @@ export const PLATFORMS = {
     name: 'Zomato',
     color: '#e23744',
     icon: 'Zo',
-    logo: null,
+    logo: zomatoLogo,
     tables: {
       inventory: '',
       secondarySells: '',
@@ -172,7 +175,7 @@ export const PLATFORMS = {
     name: 'CityMall',
     color: '#ff6b6b',
     icon: 'CM',
-    logo: null,
+    logo: citymallLogo,
     tables: {
       inventory: '',
       secondarySells: '',
