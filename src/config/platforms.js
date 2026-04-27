@@ -160,8 +160,8 @@ export const PLATFORMS = {
     icon: 'Zo',
     logo: zomatoLogo,
     tables: {
-      inventory: '',
-      secondarySells: '',
+      inventory: 'zomato_inventory',
+      secondarySells: 'zomatoSec',
       masterPO: SHARED.masterPO,
     },
     poFilterColumn: SHARED.poFilterColumn,
@@ -177,8 +177,8 @@ export const PLATFORMS = {
     icon: 'CM',
     logo: citymallLogo,
     tables: {
-      inventory: '',
-      secondarySells: '',
+      inventory: 'citymall_inventory',
+      secondarySells: 'citymallSec',
       masterPO: SHARED.masterPO,
     },
     poFilterColumn: SHARED.poFilterColumn,

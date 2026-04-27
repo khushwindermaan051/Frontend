@@ -5,7 +5,7 @@ import { getAllPlatforms } from '../config/platforms';
 import { API_BASE } from '../services/api';
 import { formatLabel, formatDateLong } from '../utils/formatters';
 import {
-  LayoutDashboard, Users, Upload, FileUp, User, Shield, BarChart3,
+  LayoutDashboard, Users, Upload, FileUp, User, Shield, BarChart3, LogOut,
 } from 'lucide-react';
 import { Sidebar, NavItem, NavLinkItem, NavSection, NavDivider, useSidebar } from '../components/layout/Sidebar';
 import { Topbar, BreadcrumbSep, BreadcrumbCurrent } from '../components/layout/Topbar';
@@ -121,7 +121,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (location.state?.openSettings) {
       setView('settings');
-      setSettingsTab('profile');
+      setSettingsTab(location.state.settingsTab || 'profile');
       // Clear state so refresh doesn't re-open settings
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -181,6 +181,12 @@ export default function Dashboard() {
     setCollapsed(false);
   };
 
+  const settingsHoverMenu = [
+    { label: 'Profile', icon: <User size={14} />, onClick: () => { setView('settings'); setSettingsTab('profile'); setCollapsed(false); } },
+    { label: 'Permissions', icon: <Shield size={14} />, onClick: () => { setView('settings'); setSettingsTab('permissions'); setCollapsed(false); } },
+    { label: 'Sign out', icon: <LogOut size={14} />, onClick: handleSignOut, danger: true },
+  ];
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setChangePwdError('');
@@ -218,6 +224,7 @@ export default function Dashboard() {
         showSettings
         settingsActive={view === 'settings'}
         onSettingsClick={goSettings}
+        settingsMenu={settingsHoverMenu}
       >
         <NavItem
           icon={<LayoutDashboard size={15} />}
@@ -283,13 +290,6 @@ export default function Dashboard() {
             />
           ) : view === 'settings' ? (
             <div className="settings-page">
-              {/* Breadcrumb */}
-              <div className="settings-breadcrumb">
-                <button className="settings-breadcrumb-link" onClick={goHome}>Home</button>
-                <span className="settings-breadcrumb-sep">›</span>
-                <span className="settings-breadcrumb-cur">Settings</span>
-              </div>
-
               <div className="settings-header">
                 <h1 className="settings-title">Settings</h1>
                 <p className="settings-sub">Manage your profile and view permissions</p>

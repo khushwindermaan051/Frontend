@@ -13,6 +13,8 @@ import PlatformDispatches from './pages/platform/PlatformDispatches';
 import PlatformDistributors from './pages/platform/PlatformDistributors';
 import PlatformLandingRate from './pages/platform/PlatformLandingRate';
 import PlatformMonthlyTargets from './pages/platform/PlatformMonthlyTargets';
+import PlatformPrimaryLandingRate from './pages/platform/PlatformPrimaryLandingRate';
+import PlatformPrimaryMonthlyTargets from './pages/platform/PlatformPrimaryMonthlyTargets';
 import MonthlyTargetsDashboard from './pages/MonthlyTargetsDashboard';
 import Distributors from './pages/Distributors';
 import UploadPage from './pages/UploadPage';
@@ -67,6 +69,8 @@ function App() {
               <Route path="distributors" element={<PlatformDistributors />} />
               <Route path="landing-rate" element={<PlatformLandingRate />} />
               <Route path="monthly-targets" element={<PlatformMonthlyTargets />} />
+              <Route path="primary/landing-rate" element={<PlatformPrimaryLandingRate />} />
+              <Route path="primary/monthly-targets" element={<PlatformPrimaryMonthlyTargets />} />
             </Route>
             <Route
               path="/upload/inventory"

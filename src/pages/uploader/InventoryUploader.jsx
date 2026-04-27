@@ -12,6 +12,8 @@ import swiggyLogo from '../../assets/logos/swiggy.png';
 import bigbasketLogo from '../../assets/logos/bigbasket.png';
 import jiomartLogo from '../../assets/logos/jiomart.jpg';
 import amazonLogo from '../../assets/logos/amazon.png';
+import zomatoLogo from '../../assets/logos/zomato.jpg';
+import citymallLogo from '../../assets/logos/citymall.png';
 import './uploader.css';
 
 const AMAZON_COLUMN_MAPPING = {
@@ -92,6 +94,26 @@ const PLATFORMS = {
     decimalFields: [], ignoreFields: [], textFields: [],
     columnMapping: { 'RFC Name': 'rfc_name', 'SKU ID': 'sku_id', 'Title': 'title', 'Category': 'category', 'Product Status': 'product_status', 'Last updated at': 'last_updated_at', 'TOTAL_SELLABLE_INV': 'total_sellable_inv', 'TOTAL_UNSELLABLE_INV': 'total_unsellable_inv', 'FC_DMG_INV': 'fc_dmg_inv', 'LSP_DMG_INV': 'lsp_dmg_inv', 'CUST_DMG_INV': 'cust_dmg_inv', 'RECVD_DMG': 'recvd_dmg', 'EXPIRED_INV': 'expired_inv', 'OTHER_UNSELLABLE_INV': 'other_unsellable_inv', 'MTD_FWD_INTRANSIT': 'mtd_fwd_intransit', 'MTD_DELVD_CUST': 'mtd_delvd_cust', 'MTD_RET_INTRANSIT': 'mtd_ret_intransit', 'MTD_ORDER_COUNT': 'mtd_order_count' },
     showBlinkitNote: false, isAmazon: false,
+  },
+  zomatoInv: {
+    name: 'Zomato', logo: zomatoLogo, color: '#E23744', bgColor: '#FDECEE',
+    table: 'zomato_inventory',
+    columns: ['city', 'sku_code', 'sku_name', 'brand', 'category', 'soh', 'soh_value'],
+    uniqueKey: 'inventory_date,city,sku_code',
+    uniqueKeyFields: ['inventory_date', 'city', 'sku_code'],
+    requiredFields: ['city', 'sku_code'],
+    numericFields: ['soh'], decimalFields: ['soh_value'], ignoreFields: [], textFields: [],
+    columnMapping: null, showBlinkitNote: false, isAmazon: false,
+  },
+  citymallInv: {
+    name: 'CityMall', logo: citymallLogo, color: '#FF6B6B', bgColor: '#FFEEEE',
+    table: 'citymall_inventory',
+    columns: ['city', 'sku_code', 'sku_name', 'brand', 'category', 'soh', 'soh_value'],
+    uniqueKey: 'inventory_date,city,sku_code',
+    uniqueKeyFields: ['inventory_date', 'city', 'sku_code'],
+    requiredFields: ['city', 'sku_code'],
+    numericFields: ['soh'], decimalFields: ['soh_value'], ignoreFields: [], textFields: [],
+    columnMapping: null, showBlinkitNote: false, isAmazon: false,
   },
   amazonInv: {
     name: 'Amazon', logo: amazonLogo, color: '#FF9900', bgColor: '#FFF4E6',

@@ -1969,6 +1969,50 @@ body {
   transform: scaleY(1);
 }
 
+/* ─── Collapsible nav groups (Secondary Sales / Primary Sales) ─── */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group-toggle {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.nav-group-toggle.has-active {
+  color: #2d3436;
+}
+
+.nav-group-caret {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #95a5a6;
+  transition: transform 0.2s ease;
+}
+
+.nav-group-caret.open {
+  transform: rotate(180deg);
+}
+
+.nav-group-children {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 4px;
+}
+
+.plat-nav-subitem {
+  padding-left: 44px;
+  font-size: 12.5px;
+  color: #7d8896;
+}
+
+.plat-nav-subitem:hover {
+  color: #2d3436;
+}
+
 .plat-back-btn {
   color: #95a5a6;
   font-size: 12px;
@@ -3010,6 +3054,109 @@ body {
 .sidebar.collapsed .sidebar-settings-btn {
   justify-content: center;
   padding: 10px 0;
+}
+
+/* ─── Settings hover menu (Profile / Permissions / Sign out) ─── */
+.sidebar-settings-wrap {
+  position: relative;
+}
+
+.settings-hover-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 12px;
+  right: 12px;
+  background: #ffffff;
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 50;
+}
+
+.sidebar-settings-wrap:hover .settings-hover-menu,
+.sidebar-settings-wrap:focus-within .settings-hover-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* After a click, force-hide the menu until the cursor leaves the wrapper */
+.sidebar-settings-wrap.menu-dismissed:hover .settings-hover-menu,
+.sidebar-settings-wrap.menu-dismissed:focus-within .settings-hover-menu {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+/* Bridge between button and popup so cursor can travel without losing hover */
+.settings-hover-menu::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 8px;
+}
+
+.settings-hover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  color: #2d3436;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.settings-hover-item:hover {
+  background: #f3f5fb;
+}
+
+.settings-hover-item.danger {
+  color: #d6336c;
+}
+
+.settings-hover-item.danger:hover {
+  background: #fff0f4;
+}
+
+.settings-hover-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #f0f2f8;
+  color: #4a5360;
+}
+
+.settings-hover-item.danger .settings-hover-icon {
+  background: #fde8ee;
+  color: #d6336c;
+}
+
+/* In collapsed sidebars, nudge the popup right of the button instead of above */
+.sidebar.collapsed .settings-hover-menu {
+  left: calc(100% + 8px);
+  right: auto;
+  bottom: 0;
+  width: 180px;
 }
 
 /* ═══════════════════════════════

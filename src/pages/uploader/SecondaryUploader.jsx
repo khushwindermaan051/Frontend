@@ -13,6 +13,8 @@ import flipkartLogo from '../../assets/logos/flipkart.png';
 import jiomartLogo from '../../assets/logos/jiomart.jpg';
 import bigbasketLogo from '../../assets/logos/bigbasket.png';
 import amazonLogo from '../../assets/logos/amazon.png';
+import zomatoLogo from '../../assets/logos/zomato.jpg';
+import citymallLogo from '../../assets/logos/citymall.png';
 import './uploader.css';
 
 const JIOMART_COLUMN_MAP = {
@@ -103,6 +105,26 @@ const PLATFORMS = {
     uniqueKey: 'source_sku_id,source_city_name,date_range', uniqueKeyFields: ['source_sku_id', 'source_city_name', 'date_range'],
     requiredFields: ['source_sku_id', 'source_city_name'],
     numericFields: ['total_quantity'], decimalFields: ['total_mrp', 'total_sales'],
+    columnMapping: null, isAmazon: false,
+  },
+  zomatoSec: {
+    name: 'Zomato', logo: zomatoLogo, color: '#E23744', bgColor: '#FDECEE',
+    table: 'zomatoSec',
+    columns: ['date', 'city', 'brand', 'category', 'sku_code', 'sku_name', 'units', 'mrp', 'sales_value'],
+    dateColumn: 'date', dateFormat: 'DD-MM-YYYY', dateExample: '01-12-2025',
+    uniqueKey: 'sku_code,city,date', uniqueKeyFields: ['sku_code', 'city', 'date'],
+    requiredFields: ['sku_code', 'city'],
+    numericFields: ['units'], decimalFields: ['mrp', 'sales_value'],
+    columnMapping: null, isAmazon: false,
+  },
+  citymallSec: {
+    name: 'CityMall', logo: citymallLogo, color: '#FF6B6B', bgColor: '#FFEEEE',
+    table: 'citymallSec',
+    columns: ['date', 'city', 'brand', 'category', 'sku_code', 'sku_name', 'units', 'mrp', 'sales_value'],
+    dateColumn: 'date', dateFormat: 'DD-MM-YYYY', dateExample: '01-12-2025',
+    uniqueKey: 'sku_code,city,date', uniqueKeyFields: ['sku_code', 'city', 'date'],
+    requiredFields: ['sku_code', 'city'],
+    numericFields: ['units'], decimalFields: ['mrp', 'sales_value'],
     columnMapping: null, isAmazon: false,
   },
   amazon: {

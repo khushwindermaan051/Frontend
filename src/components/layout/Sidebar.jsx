@@ -1,6 +1,6 @@
-import { createContext, useContext, useState } from 'react';
-import { useNavigate, NavLink as RouterNavLink, Link } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useNavigate, NavLink as RouterNavLink, Link, useLocation } from 'react-router-dom';
+import { Settings, ChevronDown } from 'lucide-react';
 import jivoLogo from '../../assets/logos/jivo.jpg';
 
 const SidebarContext = createContext({ isOpen: true });
@@ -33,6 +33,7 @@ export function Sidebar({
   showSettings = true,
   settingsActive = false,
   onSettingsClick,
+  settingsMenu,
   children,
 }) {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export function Sidebar({
   };
   const [hoverOpen, setHoverOpen] = useState(false);
   const isOpen = !collapsible || !collapsed || hoverOpen;
+  const [settingsMenuDismissed, setSettingsMenuDismissed] = useState(false);
 
   const handleSettings = onSettingsClick
     || (() => navigate('/dashboard', { state: { openSettings: true } }));
@@ -73,14 +75,41 @@ export function Sidebar({
         <nav className="sidebar-nav">{children}</nav>
 
         {showSettings && (
-          <button
-            className={`sidebar-settings-btn ${settingsActive ? 'active' : ''}`}
-            onClick={handleSettings}
-            title={!isOpen ? 'Settings' : ''}
+          <div
+            className={`sidebar-settings-wrap ${settingsMenuDismissed ? 'menu-dismissed' : ''}`}
+            onMouseLeave={() => setSettingsMenuDismissed(false)}
           >
-            <span className="sidebar-settings-icon"><Settings size={15} /></span>
-            {isOpen && <span className="nav-label">Settings</span>}
-          </button>
+            <button
+              className={`sidebar-settings-btn ${settingsActive ? 'active' : ''}`}
+              onClick={() => {
+                setSettingsMenuDismissed(true);
+                handleSettings();
+              }}
+              title={!isOpen ? 'Settings' : ''}
+            >
+              <span className="sidebar-settings-icon"><Settings size={15} /></span>
+              {isOpen && <span className="nav-label">Settings</span>}
+            </button>
+            {settingsMenu && settingsMenu.length > 0 && (
+              <div className="settings-hover-menu" role="menu">
+                {settingsMenu.map((item, i) => (
+                  <button
+                    key={item.label || i}
+                    type="button"
+                    role="menuitem"
+                    className={`settings-hover-item ${item.danger ? 'danger' : ''}`}
+                    onClick={() => {
+                      setSettingsMenuDismissed(true);
+                      item.onClick?.();
+                    }}
+                  >
+                    {item.icon && <span className="settings-hover-icon">{item.icon}</span>}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {collapsible && (
@@ -166,4 +195,47 @@ export function NavSection({ children }) {
 
 export function NavDivider() {
   return <div className="nav-divider" />;
+}
+
+// Collapsible group of nav links. Opens automatically when navigating into a
+// child route, but the user can close it manually and it stays closed until
+// they navigate to another child route.
+export function NavGroup({
+  label,
+  icon,
+  childPaths = [],
+  defaultOpen = false,
+  className = 'plat-nav-item',
+  children,
+}) {
+  const { isOpen } = useSidebar();
+  const location = useLocation();
+  const hasActiveChild = childPaths.some((p) => location.pathname.startsWith(p));
+  const [open, setOpen] = useState(defaultOpen || hasActiveChild);
+  const prevActive = useRef(hasActiveChild);
+
+  useEffect(() => {
+    if (hasActiveChild && !prevActive.current) setOpen(true);
+    prevActive.current = hasActiveChild;
+  }, [hasActiveChild]);
+
+  return (
+    <div className={`nav-group ${open ? 'open' : ''}`}>
+      <button
+        type="button"
+        className={`${className} nav-group-toggle ${hasActiveChild ? 'has-active' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        title={!isOpen ? label : ''}
+      >
+        {icon && <span className="nav-icon">{icon}</span>}
+        {isOpen && <span className="nav-label">{label}</span>}
+        {isOpen && (
+          <span className={`nav-group-caret ${open ? 'open' : ''}`}>
+            <ChevronDown size={14} />
+          </span>
+        )}
+      </button>
+      {isOpen && open && <div className="nav-group-children">{children}</div>}
+    </div>
+  );
 }
